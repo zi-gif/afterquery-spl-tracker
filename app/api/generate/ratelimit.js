@@ -1,7 +1,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-const DAILY_LIMIT = 20;
+const DAILY_LIMIT = 10;
 
 // Upstash-backed limiter (production). Lazily constructed on first call.
 let upstashLimiter = null;
