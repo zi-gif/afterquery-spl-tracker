@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { checkRateLimit, DAILY_LIMIT } from "./ratelimit";
 
 const MODEL = "claude-sonnet-4-5-20250929";
 
@@ -116,6 +117,23 @@ export async function POST(req) {
       },
       { status: 503 }
     );
+  }
+
+  // Rate limit: 20 generations per IP per day. Protects the Anthropic quota
+  // on the public demo. Upstash in prod, in-memory Map fallback in local dev.
+  try {
+    const { success, limit } = await checkRateLimit(req);
+    if (!success) {
+      return Response.json(
+        {
+          error: `Daily limit of ${DAILY_LIMIT} generations reached for this IP. Try again tomorrow.`,
+        },
+        { status: 429, headers: { "X-RateLimit-Limit": String(limit), "X-RateLimit-Remaining": "0" } }
+      );
+    }
+  } catch (e) {
+    // If rate-limit infra breaks, fail open so the demo still works.
+    console.error("[ratelimit] check failed, failing open:", e?.message || e);
   }
 
   const body = await req.json().catch(() => ({}));
