@@ -559,9 +559,6 @@ function Header({ onWeekly, onAddProject }) {
         <span style={styles.logoDivider} />
         <span style={styles.logoProduct}>SPL Ops Console</span>
       </div>
-      <nav style={styles.nav}>
-        <a style={{ ...styles.navLink, ...styles.navActive }} href="#">Portfolio</a>
-      </nav>
       <div style={styles.headerActions}>
         <button style={{ ...styles.btn, ...styles.btnSecondary }} onClick={onAddProject}>Add project</button>
         <button style={{ ...styles.btn, ...styles.btnPrimary }} onClick={onWeekly}>
@@ -839,41 +836,52 @@ function AIPanel({ p, ai, onGenerate }) {
 
   return (
     <div style={styles.aiPanel}>
-      <div style={styles.aiPanelBadge}>AI ASSESSMENT · CLAUDE SONNET 4.6</div>
-
-      {/* Content layer, blurred until generated */}
-      <div style={{ ...styles.aiContent, filter: hasContent ? "none" : "blur(5px)", opacity: hasContent ? 1 : 0.65 }}>
-        <div style={styles.aiBody}>{hasContent ? ai.text : placeholderBody}</div>
-        <div style={styles.aiAction}>
-          <strong style={{ color: C.ink, fontWeight: 500 }}>Recommended action. </strong>
-          {hasContent ? ai.action : placeholderAction}
-        </div>
+      <div style={styles.aiPanelHeader}>
+        <span style={styles.aiPanelHeaderLabel}>AI Assessment</span>
+        <span style={styles.aiPanelHeaderMeta}>Claude Sonnet 4.6</span>
       </div>
 
-      {/* Overlay pill, visible until content exists */}
-      {!hasContent && (
-        <div style={styles.aiOverlay}>
-          {errored ? (
-            <>
-              <div style={styles.aiOverlayError}>AI unavailable: {ai.error}</div>
-              <button
-                style={{ ...styles.btn, ...styles.btnPrimary, fontSize: 12.5 }}
-                onClick={onGenerate}
-              >
-                Try again →
-              </button>
-            </>
-          ) : (
-            <button
-              style={{ ...styles.btn, ...styles.btnPrimary, fontSize: 13 }}
-              onClick={onGenerate}
-              disabled={loading}
-            >
-              {loading ? "Generating…" : "Generate AI assessment →"}
-            </button>
-          )}
+      <div style={styles.aiPanelInner}>
+        {/* Content layer, blurred until generated */}
+        <div
+          style={{
+            ...styles.aiContent,
+            filter: hasContent ? "none" : "blur(5px)",
+            opacity: hasContent ? 1 : 0.6,
+          }}
+        >
+          <div style={styles.aiBody}>{hasContent ? ai.text : placeholderBody}</div>
+          <div style={styles.aiAction}>
+            <strong style={{ color: C.ink, fontWeight: 500 }}>Recommended action. </strong>
+            {hasContent ? ai.action : placeholderAction}
+          </div>
         </div>
-      )}
+
+        {/* Overlay pill, visible until content exists */}
+        {!hasContent && (
+          <div style={styles.aiOverlay}>
+            {errored ? (
+              <>
+                <div style={styles.aiOverlayError}>AI unavailable: {ai.error}</div>
+                <button
+                  style={{ ...styles.btn, ...styles.btnPrimary, fontSize: 12.5 }}
+                  onClick={onGenerate}
+                >
+                  Try again →
+                </button>
+              </>
+            ) : (
+              <button
+                style={{ ...styles.btn, ...styles.btnPrimary, fontSize: 13 }}
+                onClick={onGenerate}
+                disabled={loading}
+              >
+                {loading ? "Generating…" : "Generate AI assessment →"}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1163,7 +1171,7 @@ const styles = {
   },
   header: {
     display: "grid",
-    gridTemplateColumns: "1fr auto 1fr",
+    gridTemplateColumns: "1fr auto",
     alignItems: "center",
     padding: "22px 48px 20px",
   },
@@ -1402,11 +1410,41 @@ const styles = {
   aiPanel: {
     border: `1px solid ${C.hairStrong}`,
     background: C.cream,
-    padding: "22px 24px",
     borderRadius: 3,
+    display: "flex",
+    flexDirection: "column",
+    minHeight: 220,
+  },
+  aiPanelHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "12px 18px",
+    borderBottom: `1px solid ${C.hair}`,
+    background: C.cream2,
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
+  },
+  aiPanelHeaderLabel: {
+    fontFamily: F.serif,
+    fontSize: 13,
+    fontWeight: 500,
+    fontVariationSettings: '"opsz" 14',
+    letterSpacing: "-0.005em",
+    color: C.ink,
+  },
+  aiPanelHeaderMeta: {
+    fontFamily: F.mono,
+    fontSize: 10,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
+    color: C.muted,
+  },
+  aiPanelInner: {
     position: "relative",
+    padding: "22px 24px",
+    flex: 1,
     overflow: "hidden",
-    minHeight: 180,
   },
   aiContent: { transition: "filter 0.35s ease, opacity 0.35s ease" },
   aiOverlay: {
@@ -1418,7 +1456,7 @@ const styles = {
     justifyContent: "center",
     gap: 10,
     background:
-      "linear-gradient(180deg, rgba(246,245,238,0.05) 0%, rgba(246,245,238,0.35) 40%, rgba(246,245,238,0.55) 100%)",
+      "linear-gradient(180deg, rgba(246,245,238,0.10) 0%, rgba(246,245,238,0.45) 50%, rgba(246,245,238,0.65) 100%)",
   },
   aiOverlayError: {
     fontFamily: F.mono,
