@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 
-// ────────────────────────────────────────────────────────────────────
-// Tokens
-// ────────────────────────────────────────────────────────────────────
+/* AfterQuery SPL Ops Console.
+   Two-project portfolio. Twelve-signal deterministic risk engine.
+   Claude-drafted lab researcher updates, Slack alerts, calibration
+   posts, war-room briefs, and a Monday founder digest. */
+
+const TODAY = new Date("2026-04-22T10:14:00-07:00");
+
+/* ────────────────────────────────────────────────────────────────────
+   Tokens (sampled from afterquery.com)
+   ──────────────────────────────────────────────────────────────────── */
 const C = {
   cream: "#F6F5EE",
   cream2: "#EFEDE3",
@@ -27,370 +34,362 @@ const F = {
   mono: "'JetBrains Mono', ui-monospace, monospace",
 };
 
-// ────────────────────────────────────────────────────────────────────
-// Seed data (12 projects, 2 RED / 4 YELLOW / 6 GREEN)
-// ────────────────────────────────────────────────────────────────────
+/* ────────────────────────────────────────────────────────────────────
+   Constants
+   ──────────────────────────────────────────────────────────────────── */
+const PRODUCT_TYPES = [
+  "SFT + CoT Demonstrations",
+  "Rubric & Verifier-based RL",
+  "Tool-calling RL Env",
+  "Computer-use Trajectories",
+  "Browser-use Trajectories",
+  "RLHF Preferences",
+  "Code Generation",
+  "Deep Research",
+  "Custom Eval",
+  "Multimodal Training",
+  "Loss Analysis",
+  "Trajectory Labeling",
+];
+const BENCHMARKS = ["Custom", "FinanceQA", "IDE-Bench", "Market-Bench", "App-Bench", "UI-Bench", "Terminal-Bench 2.0", "τ²-bench"];
+const MODALITIES = ["Text", "Code", "Multi-turn Chat", "Tool-calling (API/MCP)", "Browser", "Desktop", "Image", "Audio", "Video"];
+const STATUSES = ["Scoping", "Tooling Build", "Sourcing", "Onboarding", "In-Production", "Rubric Review", "Delivered"];
+const SOURCES = ["AfterQuery Experts Network", "Community Referral", "Lab BYO Roster", "Partner Vendor", "Mixed"];
+const PRICING_MODELS = [
+  { key: "hourly", label: "Hourly", short: "/hr" },
+  { key: "per_task", label: "Per task", short: "/task" },
+];
+const LABS = ["OpenAI", "Anthropic", "Google DeepMind", "Meta AI", "xAI", "Microsoft", "Apple", "Nvidia", "Amazon", "Cohere", "Mistral"];
+
+/* ────────────────────────────────────────────────────────────────────
+   Seeded portfolio (two engagements: one RED, one GREEN)
+   ──────────────────────────────────────────────────────────────────── */
 const DEFAULT_PROJECTS = [
   {
     id: "p1",
     lab: "OpenAI",
     project: "Terminal-Bench 2.0 Tool-calling RL Environment",
-    capabilityGap: "Long-horizon terminal agent reasoning under filesystem and network state.",
+    capabilityGap:
+      "Long-horizon terminal agent reasoning under filesystem and network state; the agent must complete multi-step CLI workflows that change world state at each step.",
+    failureMode:
+      "Agent loses state on multi-file refactors in large codebases; can't resume after a failing test without re-reading the whole tree.",
     productType: "Tool-calling RL Env",
     benchmarkTarget: "Terminal-Bench 2.0",
+    domain: "Software Engineering",
     credentialBar: "FAANG L6+, 5+ yr infra, prior terminal-agent exposure preferred.",
-    modality: "Code · Tool-calling (MCP)",
+    modality: "Tool-calling (API/MCP)",
     targetTasks: 500,
     completed: 184,
-    expertVettingPassRate: 8,
+    rampPlan: [
+      { week: 0, targetCumulative: 0 },
+      { week: 1, targetCumulative: 60 },
+      { week: 2, targetCumulative: 180 },
+      { week: 3, targetCumulative: 320 },
+      { week: 4, targetCumulative: 440 },
+      { week: 5, targetCumulative: 500 },
+    ],
     perTestRewardAvg: 0.31,
     binaryPassRate: 0.08,
+    expertVettingPassRate: 8,
     rubricFlagCount: 31,
-    completedOrFlagged: 215,
     expertCount: 14,
+    team: { writers: 11, reviewers: 2, superReviewers: 1, teamLeads: 0 },
+    kappa: 0.62,
+    oneShotRate: 54,
+    reviewsPerTask: 3.2,
+    reviewQueueDepth: 19,
+    aht: 9.4,
+    ahtTarget: 7.0,
+    onboardingFunnel: null,
+    timeToFirstTask: 38,
+    pricingModel: "hourly",
     avgHourlyRate: 145,
-    country: "US/EU",
+    taskRate: null,
+    primaryResearcher: { name: "David Chen", role: "Research Lead, Agent Training" },
+    lastUpdateAt: "2026-04-19T15:30:00-07:00",
+    lastQBRAt: "2026-04-04",
+    country: "United States",
     language: "English",
     region: "NAMER/EMEA",
     timezone: "PT",
     source: "AfterQuery Experts Network",
     status: "In-Production",
-    deadlineLabel: "42h",
-    deadlineSub: "May 3 · 17:00 PT",
+    startDate: "2026-03-23",
+    deadline: "2026-05-04",
   },
   {
     id: "p2",
-    lab: "Google DeepMind",
-    project: "Olympiad Math Rubric & Verifier Authoring",
-    capabilityGap: "Proof-level mathematical reasoning with stepwise verifier.",
-    productType: "Rubric & Verifier-based RL",
-    benchmarkTarget: "Custom",
-    credentialBar: "IMO / USAMO medalists, or PhD pure math.",
-    modality: "Text",
-    targetTasks: 200,
-    completed: 92,
-    expertVettingPassRate: 11,
-    perTestRewardAvg: 0.38,
-    binaryPassRate: 0.12,
-    rubricFlagCount: 24,
-    completedOrFlagged: 116,
-    expertCount: 9,
-    avgHourlyRate: 180,
-    country: "US/UK",
-    language: "English",
-    region: "NAMER/EMEA",
-    timezone: "PT",
-    source: "Community Referral",
-    status: "Rubric Review",
-    deadlineLabel: "6d",
-    deadlineSub: "Apr 28 · 09:00 PT",
-  },
-  {
-    id: "p3",
     lab: "Anthropic",
     project: "Clinical Reasoning SFT with Chain-of-Thought",
-    capabilityGap: "Stepwise differential diagnosis from patient history.",
+    capabilityGap:
+      "Stepwise differential diagnosis from patient history, with explicit uncertainty flags on vague presenting symptoms.",
+    failureMode:
+      "Model under-specifies differential diagnoses for vague presenting symptoms; defaults to the most-common condition without flagging uncertainty.",
     productType: "SFT + CoT Demonstrations",
     benchmarkTarget: "Custom",
-    credentialBar: "MD, 3+ yr clinical, US board certified.",
+    domain: "Medicine",
+    credentialBar: "MD, US board certified, 3+ yr clinical.",
     modality: "Text",
     targetTasks: 600,
-    completed: 412,
-    expertVettingPassRate: 22,
-    perTestRewardAvg: 0.57,
-    binaryPassRate: 0.41,
-    rubricFlagCount: 42,
-    completedOrFlagged: 454,
-    expertCount: 28,
-    avgHourlyRate: 210,
-    country: "US",
-    language: "English",
-    region: "NAMER",
-    timezone: "ET",
-    source: "AfterQuery Experts Network",
-    status: "In-Production",
-    deadlineLabel: "11d",
-    deadlineSub: "May 3 · 17:00 PT",
-  },
-  {
-    id: "p4",
-    lab: "xAI",
-    project: "Market-Bench Trajectory Labeling",
-    capabilityGap: "Introductory quantitative trading trajectories with outcome labels.",
-    productType: "Trajectory Labeling",
-    benchmarkTarget: "Market-Bench",
-    credentialBar: "IB analyst or quant, CFA or MFE preferred.",
-    modality: "Text · Code",
-    targetTasks: 150,
-    completed: 67,
-    expertVettingPassRate: 18,
-    perTestRewardAvg: 0.49,
-    binaryPassRate: 0.28,
-    rubricFlagCount: 9,
-    completedOrFlagged: 76,
-    expertCount: 11,
-    avgHourlyRate: 165,
-    country: "US",
-    language: "English",
-    region: "NAMER",
-    timezone: "ET",
-    source: "Lab BYO Roster",
-    status: "In-Production",
-    deadlineLabel: "9d",
-    deadlineSub: "May 1 · 12:00 PT",
-  },
-  {
-    id: "p5",
-    lab: "Microsoft",
-    project: "Copilot Enterprise Excel Custom Eval",
-    capabilityGap: "M&A model stress-testing, three-statement integrity checks.",
-    productType: "Custom Eval",
-    benchmarkTarget: "Custom",
-    credentialBar: "IB associate or VP, 3+ yr M&A modeling.",
-    modality: "Code · Text",
-    targetTasks: 450,
-    completed: 318,
-    expertVettingPassRate: 24,
-    perTestRewardAvg: 0.61,
-    binaryPassRate: 0.44,
-    rubricFlagCount: 18,
-    completedOrFlagged: 336,
-    expertCount: 19,
-    avgHourlyRate: 175,
-    country: "US/UK",
-    language: "English",
-    region: "NAMER/EMEA",
-    timezone: "PT",
-    source: "AfterQuery Experts Network",
-    status: "In-Production",
-    deadlineLabel: "14d",
-    deadlineSub: "May 6 · 17:00 PT",
-  },
-  {
-    id: "p6",
-    lab: "Amazon",
-    project: "Bedrock Agent Tool-calling RL Environment on MCP",
-    capabilityGap: "Multi-tool service workflows across AWS primitives.",
-    productType: "Tool-calling RL Env",
-    benchmarkTarget: "Custom",
-    credentialBar: "AWS senior engineer, 4+ yr, MCP familiarity.",
-    modality: "Tool-calling (API/MCP)",
-    targetTasks: 400,
-    completed: 201,
-    expertVettingPassRate: 16,
-    perTestRewardAvg: 0.54,
-    binaryPassRate: 0.35,
-    rubricFlagCount: 22,
-    completedOrFlagged: 223,
-    expertCount: 16,
-    avgHourlyRate: 155,
-    country: "US",
-    language: "English",
-    region: "NAMER",
-    timezone: "PT",
-    source: "Partner Vendor",
-    status: "In-Production",
-    deadlineLabel: "18d",
-    deadlineSub: "May 10 · 17:00 PT",
-  },
-  {
-    id: "p7",
-    lab: "Meta AI",
-    project: "Legal RLHF Preference Pairs on M&A Filings",
-    capabilityGap: "Deal-document judgment, risk-factor disclosure calibration.",
-    productType: "RLHF Preferences",
-    benchmarkTarget: "Custom",
-    credentialBar: "JD, 3+ yr M&A, big-law exposure.",
-    modality: "Text",
-    targetTasks: 3000,
-    completed: 2410,
-    expertVettingPassRate: 27,
-    perTestRewardAvg: 0.78,
-    binaryPassRate: 0.62,
-    rubricFlagCount: 14,
-    completedOrFlagged: 2424,
-    expertCount: 44,
-    avgHourlyRate: 225,
-    country: "US",
-    language: "English",
-    region: "NAMER",
-    timezone: "ET",
-    source: "AfterQuery Experts Network",
-    status: "In-Production",
-    deadlineLabel: "4d",
-    deadlineSub: "Apr 26 · 12:00 PT",
-  },
-  {
-    id: "p8",
-    lab: "Apple",
-    project: "Consumer Computer-use Trajectories",
-    capabilityGap: "Everyday desktop workflows captured as keystroke-level demonstrations.",
-    productType: "Computer-use Trajectories",
-    benchmarkTarget: "Custom",
-    credentialBar: "Native English, power-user, broad app fluency.",
-    modality: "Desktop",
-    targetTasks: 1500,
-    completed: 1120,
-    expertVettingPassRate: 35,
+    completed: 516,
+    rampPlan: [
+      { week: 0, targetCumulative: 0 },
+      { week: 1, targetCumulative: 80 },
+      { week: 2, targetCumulative: 220 },
+      { week: 3, targetCumulative: 380 },
+      { week: 4, targetCumulative: 520 },
+      { week: 5, targetCumulative: 600 },
+    ],
     perTestRewardAvg: 0.74,
     binaryPassRate: 0.58,
-    rubricFlagCount: 19,
-    completedOrFlagged: 1139,
-    expertCount: 62,
-    avgHourlyRate: 65,
-    country: "US/CA/UK",
+    expertVettingPassRate: 26,
+    rubricFlagCount: 14,
+    expertCount: 28,
+    team: { writers: 22, reviewers: 4, superReviewers: 1, teamLeads: 1 },
+    kappa: 0.82,
+    oneShotRate: 78,
+    reviewsPerTask: 1.8,
+    reviewQueueDepth: 4,
+    aht: 4.2,
+    ahtTarget: 4.5,
+    onboardingFunnel: null,
+    timeToFirstTask: 22,
+    pricingModel: "hourly",
+    avgHourlyRate: 210,
+    taskRate: null,
+    primaryResearcher: { name: "Dr. Priya Patel", role: "Research Scientist, Medical RL" },
+    lastUpdateAt: "2026-04-21T09:00:00-04:00",
+    lastQBRAt: "2026-03-30",
+    country: "United States",
     language: "English",
-    region: "NAMER/EMEA",
-    timezone: "Mixed",
+    region: "NAMER",
+    timezone: "ET",
     source: "AfterQuery Experts Network",
     status: "In-Production",
-    deadlineLabel: "5d",
-    deadlineSub: "Apr 27 · 17:00 PT",
-  },
-  {
-    id: "p9",
-    lab: "Nvidia",
-    project: "CUDA Kernel SFT with Tests & Debugging Traces",
-    capabilityGap: "GPU kernel optimization under tight memory and warp constraints.",
-    productType: "SFT + CoT · Code Gen",
-    benchmarkTarget: "Custom",
-    credentialBar: "CUDA / HPC PhD or equivalent industry.",
-    modality: "Code",
-    targetTasks: 400,
-    completed: 288,
-    expertVettingPassRate: 14,
-    perTestRewardAvg: 0.82,
-    binaryPassRate: 0.71,
-    rubricFlagCount: 8,
-    completedOrFlagged: 296,
-    expertCount: 12,
-    avgHourlyRate: 240,
-    country: "US/EU",
-    language: "English",
-    region: "NAMER/EMEA",
-    timezone: "PT",
-    source: "Community Referral",
-    status: "In-Production",
-    deadlineLabel: "16d",
-    deadlineSub: "May 8 · 12:00 PT",
-  },
-  {
-    id: "p10",
-    lab: "Cohere",
-    project: "Multilingual RLHF Preference Pairs",
-    capabilityGap: "Cultural preference calibration across 12 languages.",
-    productType: "RLHF Preferences",
-    benchmarkTarget: "Custom",
-    credentialBar: "Native speaker, college+, content/writing background.",
-    modality: "Multi-turn Chat",
-    targetTasks: 6000,
-    completed: 4800,
-    expertVettingPassRate: 31,
-    perTestRewardAvg: 0.71,
-    binaryPassRate: 0.55,
-    rubricFlagCount: 28,
-    completedOrFlagged: 4828,
-    expertCount: 96,
-    avgHourlyRate: 55,
-    country: "Global (12 locales)",
-    language: "12 languages",
-    region: "Global",
-    timezone: "Mixed",
-    source: "Mixed",
-    status: "In-Production",
-    deadlineLabel: "23d",
-    deadlineSub: "May 15 · 17:00 PT",
-  },
-  {
-    id: "p11",
-    lab: "Mistral",
-    project: "French M&A Legal Corpus Annotation",
-    capabilityGap: "French-language contract reasoning, deal-document judgment.",
-    productType: "SFT + CoT",
-    benchmarkTarget: "Custom",
-    credentialBar: "French avocat, 3+ yr corporate/M&A.",
-    modality: "Text",
-    targetTasks: 1000,
-    completed: 780,
-    expertVettingPassRate: 21,
-    perTestRewardAvg: 0.76,
-    binaryPassRate: 0.6,
-    rubricFlagCount: 11,
-    completedOrFlagged: 791,
-    expertCount: 22,
-    avgHourlyRate: 195,
-    country: "FR",
-    language: "French",
-    region: "EMEA",
-    timezone: "CET",
-    source: "AfterQuery Experts Network",
-    status: "In-Production",
-    deadlineLabel: "3d",
-    deadlineSub: "Apr 25 · 17:00 CET",
-  },
-  {
-    id: "p12",
-    lab: "OpenAI",
-    project: "Biosafety Deep Research Red Team",
-    capabilityGap: "Long-horizon adversarial bio reasoning, dual-use review.",
-    productType: "Deep Research · Red Team",
-    benchmarkTarget: "Custom",
-    credentialBar: "PhD biologist with dual-use review training.",
-    modality: "Text",
-    targetTasks: 200,
-    completed: 118,
-    expertVettingPassRate: 17,
-    perTestRewardAvg: 0.69,
-    binaryPassRate: 0.51,
-    rubricFlagCount: 6,
-    completedOrFlagged: 124,
-    expertCount: 8,
-    avgHourlyRate: 285,
-    country: "US/UK",
-    language: "English",
-    region: "NAMER/EMEA",
-    timezone: "PT",
-    source: "AfterQuery Experts Network",
-    status: "In-Production",
-    deadlineLabel: "28d",
-    deadlineSub: "May 20 · 17:00 PT",
+    startDate: "2026-03-19",
+    deadline: "2026-05-08",
   },
 ];
 
-// ────────────────────────────────────────────────────────────────────
-// Risk engine, deterministic six-signal
-// ────────────────────────────────────────────────────────────────────
-function computeRisk(p) {
-  const levels = ["low"];
-  const pct = (p.completed / p.targetTasks) * 100;
-  // Pace gap is approximated from deadlineLabel parsing (hours/days remaining)
-  // For seeded data we just use explicit signal cutoffs.
-  if (p.perTestRewardAvg < 0.2) levels.push("high");
-  else if (p.perTestRewardAvg < 0.4) levels.push("medium");
-
-  if (p.expertVettingPassRate < 10) levels.push("high");
-  else if (p.expertVettingPassRate < 20) levels.push("medium");
-
-  const flagRate = p.rubricFlagCount / Math.max(1, p.completedOrFlagged);
-  if (flagRate > 0.3) levels.push("high");
-  else if (flagRate > 0.15) levels.push("medium");
-
-  if (pct < 50 && p.deadlineLabel.endsWith("h")) levels.push("high");
-
-  if (levels.includes("high")) return "high";
-  if (levels.includes("medium")) return "medium";
-  return "low";
+/* ────────────────────────────────────────────────────────────────────
+   Helpers
+   ──────────────────────────────────────────────────────────────────── */
+function teamTotal(t) {
+  if (!t) return 0;
+  return (t.writers || 0) + (t.reviewers || 0) + (t.superReviewers || 0) + (t.teamLeads || 0);
 }
 
-// ────────────────────────────────────────────────────────────────────
-// Component
-// ────────────────────────────────────────────────────────────────────
+function tasksPerWeekPlanned(p) {
+  if (!p?.startDate || !p?.deadline || !p?.targetTasks) return 0;
+  const weeks = Math.max(0.5, (new Date(p.deadline) - new Date(p.startDate)) / (7 * 864e5));
+  return p.targetTasks / weeks;
+}
+
+function weeklyBurnUSD(p) {
+  if (!p) return 0;
+  if (p.pricingModel === "per_task") {
+    return tasksPerWeekPlanned(p) * (Number(p.taskRate) || 0);
+  }
+  const team = teamTotal(p.team) || p.expertCount || 0;
+  return team * (Number(p.avgHourlyRate) || 0) * 40;
+}
+
+function formatRate(p) {
+  if (!p) return "—";
+  if (p.pricingModel === "per_task") {
+    return `$${(Number(p.taskRate) || 0).toLocaleString()}/task`;
+  }
+  return `$${Number(p.avgHourlyRate) || 0}/hr`;
+}
+
+function fmtMoney(n) {
+  if (n == null || isNaN(n)) return "$0";
+  if (Math.abs(n) >= 1e6) return `$${(n / 1e6).toFixed(n >= 1e7 ? 1 : 2)}M`;
+  if (Math.abs(n) >= 1e3) return `$${Math.round(n / 1e3)}K`;
+  return `$${Math.round(n)}`;
+}
+
+function rampTargetAt(rampPlan, weeks) {
+  if (!rampPlan || rampPlan.length === 0) return 0;
+  const w = Math.max(0, weeks);
+  const floor = Math.floor(w);
+  const ceil = Math.ceil(w);
+  if (ceil >= rampPlan.length) return rampPlan[rampPlan.length - 1].targetCumulative;
+  if (floor === ceil) return rampPlan[floor]?.targetCumulative || 0;
+  const a = rampPlan[floor]?.targetCumulative || 0;
+  const b = rampPlan[ceil]?.targetCumulative || 0;
+  return a + (b - a) * (w - floor);
+}
+
+function deadlineHours(p) {
+  return Math.max(0, (new Date(p.deadline) - TODAY) / 36e5);
+}
+
+function deadlineLabelShort(p) {
+  const h = deadlineHours(p);
+  if (h < 48) return `${Math.round(h)}h`;
+  return `${Math.round(h / 24)}d`;
+}
+
+function deadlineSub(p) {
+  const d = new Date(p.deadline);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function daysAgo(iso) {
+  if (!iso) return null;
+  return Math.max(0, (TODAY - new Date(iso)) / 864e5);
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Risk engine, twelve named signals, deterministic
+   ──────────────────────────────────────────────────────────────────── */
+function computeRisk(p) {
+  const start = new Date(p.startDate);
+  const end = new Date(p.deadline);
+  const totalDays = Math.max(1, (end - start) / 864e5);
+  const daysElapsed = Math.max(0, (TODAY - start) / 864e5);
+  const hoursToDeadline = Math.max(0, (end - TODAY) / 36e5);
+  const completionPct = (p.completed / p.targetTasks) * 100;
+  const timelinePct = (daysElapsed / totalDays) * 100;
+
+  const weeksElapsed = Math.max(0, daysElapsed / 7);
+  const rampTargetNow = rampTargetAt(p.rampPlan, weeksElapsed);
+  const rampDelta = Math.max(0, rampTargetNow - p.completed);
+  const rampPctBehind = rampTargetNow > 0 ? (rampDelta / rampTargetNow) * 100 : 0;
+
+  const totalAttempts = p.completed + (p.rubricFlagCount || 0);
+  const flagRate = totalAttempts > 0 ? (p.rubricFlagCount || 0) / totalAttempts : 0;
+
+  const hoursSinceUpdate = p.lastUpdateAt ? Math.max(0, (TODAY - new Date(p.lastUpdateAt)) / 36e5) : 0;
+  const ahtOver = p.aht && p.ahtTarget ? (p.aht - p.ahtTarget) / p.ahtTarget : 0;
+
+  const w = p.team?.writers || 0;
+  const rev = (p.team?.reviewers || 0) + (p.team?.superReviewers || 0);
+  const reviewerRatio = rev > 0 ? w / rev : Infinity;
+
+  let level = "low";
+  const reasons = [];
+  const trip = (lvl, reason) => {
+    if (lvl === "high") level = "high";
+    else if (lvl === "medium" && level !== "high") level = "medium";
+    reasons.push(reason);
+  };
+
+  // 1. Ramp-plan delta
+  if (rampPctBehind > 30) trip("high", `Behind ramp plan by ${Math.round(rampDelta)} tasks (${Math.round(rampPctBehind)}% off the week-${Math.ceil(weeksElapsed)} target).`);
+  else if (rampPctBehind > 15) trip("medium", `Behind ramp plan by ${Math.round(rampDelta)} tasks.`);
+
+  // 2. Per-test reward (AfterQuery-specific headline)
+  if (p.perTestRewardAvg < 0.2) trip("high", `Per-test reward at ${p.perTestRewardAvg.toFixed(2)}; rubric or tooling is broken.`);
+  else if (p.perTestRewardAvg < 0.4) trip("medium", `Per-test reward at ${p.perTestRewardAvg.toFixed(2)}; below the 0.40 attention band.`);
+
+  // 3. Vetting pass rate
+  if (p.expertVettingPassRate < 10) trip("high", `Vetting pass rate at ${p.expertVettingPassRate}%; credential bar too tight for the sourcing pool.`);
+  else if (p.expertVettingPassRate < 20) trip("medium", `Vetting pass rate at ${p.expertVettingPassRate}%; sourcing tightening.`);
+
+  // 4. Rubric flag rate
+  if (flagRate > 0.3) trip("high", `Rubric flag rate at ${Math.round(flagRate * 100)}%; rubric ambiguity or contributor caliber.`);
+  else if (flagRate > 0.15) trip("medium", `Rubric flag rate at ${Math.round(flagRate * 100)}%; above the 15% band.`);
+
+  // 5. Deadline pressure
+  if (hoursToDeadline < 24 && completionPct < 80) trip("high", `Under 24h to deadline with ${Math.round(completionPct)}% delivered.`);
+  else if (hoursToDeadline < 48 && completionPct < 60) trip("medium", `Under 48h to deadline with ${Math.round(completionPct)}% delivered.`);
+
+  // 6. Tooling build stall (AfterQuery-specific)
+  if (p.status === "Tooling Build" && daysElapsed > 3) trip("medium", `Tooling Build stalled at ${Math.round(daysElapsed)}d; custom env not yet shipped.`);
+
+  // 7. Update cadence stale
+  if (hoursSinceUpdate > 120) trip("high", `Last researcher update ${Math.round(hoursSinceUpdate / 24)}d ago; cadence has slipped.`);
+  else if (hoursSinceUpdate > 72) trip("medium", `Last researcher update ${Math.round(hoursSinceUpdate / 24)}d ago.`);
+
+  // 8. Kappa (rubric only)
+  if (p.kappa != null) {
+    if (p.kappa < 0.6) trip("high", `Kappa ${p.kappa.toFixed(2)} (below 0.6); rubric is ambiguous.`);
+    else if (p.kappa < 0.7) trip("medium", `Kappa ${p.kappa.toFixed(2)} (below 0.7 target); calibration needed.`);
+  }
+
+  // 9. Review queue depth
+  const q = p.reviewQueueDepth || 0;
+  if (q > 30) trip("high", `Review queue ${q} tasks; reviewer bottleneck blocking writers.`);
+  else if (q > 10) trip("medium", `Review queue ${q} tasks (above 10 bottleneck threshold).`);
+
+  // 10. AHT over target
+  if (ahtOver > 0.4) trip("high", `AHT ${p.aht}h is ${Math.round(ahtOver * 100)}% over ${p.ahtTarget}h target.`);
+  else if (ahtOver > 0.2) trip("medium", `AHT ${p.aht}h is ${Math.round(ahtOver * 100)}% over ${p.ahtTarget}h target.`);
+
+  // 11. One-shot rate low
+  if (p.oneShotRate != null && p.oneShotRate < 50) trip("medium", `One-shot rate ${p.oneShotRate}%; well below the 70% writer-quality bar.`);
+
+  // 12. Time-to-first-task (sourcing/onboarding only)
+  if ((p.status === "Sourcing" || p.status === "Onboarding") && (p.timeToFirstTask || 0) > 48) {
+    trip("medium", `Time-to-first-task ${p.timeToFirstTask}h; access delays bleeding the funnel.`);
+  }
+
+  let summary, action;
+  if (level === "low") {
+    summary = `Tracking to land. ${Math.round(completionPct)}% delivered with ${Math.max(0, Math.round(hoursToDeadline / 24))}d remaining; per-test reward ${p.perTestRewardAvg.toFixed(2)}, rubric flag rate ${Math.round(flagRate * 100)}%, ${p.kappa != null ? `kappa ${p.kappa.toFixed(2)}, ` : ""}AHT ${p.aht}h vs ${p.ahtTarget}h target.`;
+    action = "No lever needed; continue monitoring.";
+  } else {
+    summary = reasons.join(" ");
+    action = level === "high"
+      ? (p.perTestRewardAvg < 0.4
+          ? "Run a Docent pass over the last 48 failed trajectories, cluster on the dominant tool-selection error, extend the verifier test suite on that mode before opening a new sourcing wave."
+          : p.expertVettingPassRate < 10
+            ? "Widen the credential bar by one tier; open a Community Referral wave on adjacent seniority; stand up a tiered quality bonus for the first wave."
+            : flagRate > 0.3
+              ? "Pause intake; audit 30 flagged tasks with a Super-Reviewer; refine the rubric on the dominant failure mode; re-sequence QA into a two-tier review."
+              : p.kappa != null && p.kappa < 0.6
+                ? "Pause production; run a calibration batch on 20 borderline cases with all reviewers; rewrite the ambiguous criterion with three examples per score level; re-measure kappa before resuming."
+                : q > 30
+                  ? "Emergency-onboard 2 reviewers from top one-shot writers; simplify the review checklist to under 15 min/task; unblock writers to start next task while awaiting review."
+                  : "Escalate to the Tooling Platform for a parallel pipeline; re-sequence authoring and review; negotiate a 48h deadline slip with the lab researcher.")
+      : (p.perTestRewardAvg < 0.7
+          ? "Run a Docent pass on failed trajectories to locate the dominant failure mode, then extend the verifier test suite on that one mode and re-measure per-test reward in 48h."
+          : p.expertVettingPassRate < 20
+            ? "Loosen one vetting criterion on the adjacent credential tier; open a targeted Community Referral wave."
+            : p.kappa != null && p.kappa < 0.7
+              ? "Run a calibration batch this week on 10 borderline items; tighten the ambiguous criterion with two examples per score level; target kappa ≥ 0.7 in 7 days."
+              : (p.reviewsPerTask || 0) > 3
+                ? "Audit reviewer disagreement patterns; update the top three disputed criteria with explicit examples; add a Super-Reviewer gate on the most-contested domain."
+                : q > 10
+                  ? "Promote 2 top one-shot writers to reviewers; simplify the review checklist; target a 1:5 reviewer-to-writer ratio."
+                  : flagRate > 0.15
+                    ? "Spot-audit 20 flagged tasks; refine instructions on the dominant failure mode; stand up a Super-Reviewer gate before delivery."
+                    : hoursSinceUpdate > 72
+                      ? "Send a researcher update today; schedule a standing Friday cadence going forward."
+                      : "Monitor closely. Prepare contingent sourcing via Partner Vendor and a tiered bonus for the final push.");
+  }
+
+  return {
+    level,
+    summary,
+    action,
+    completionPct,
+    timelinePct,
+    hoursToDeadline,
+    rampTargetNow,
+    rampDelta,
+    rampPctBehind,
+    flagRate,
+    hoursSinceUpdate,
+    ahtOver,
+    reviewerRatio,
+    queueDepth: q,
+  };
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Top-level component
+   ──────────────────────────────────────────────────────────────────── */
 export default function Page() {
   const [projects, setProjects] = useState(DEFAULT_PROJECTS);
   const [riskFilter, setRiskFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [warRoom, setWarRoom] = useState(false);
   const [expandedId, setExpandedId] = useState("p1");
-  const [aiState, setAiState] = useState({}); // { [id]: { loading, error, text, action } }
-  const [draftOpen, setDraftOpen] = useState(null); // { id, kind, text, loading, error }
+  const [aiState, setAiState] = useState({}); // { [id]: { loading, error, summary, action } }
+  const [draft, setDraft] = useState(null); // { kind, label, text, loading, error }
   const [addOpen, setAddOpen] = useState(false);
 
   const withRisk = useMemo(
@@ -400,80 +399,68 @@ export default function Page() {
 
   const counts = useMemo(() => {
     const c = { all: withRisk.length, high: 0, medium: 0, low: 0 };
-    withRisk.forEach((p) => (c[p.risk] += 1));
+    withRisk.forEach((p) => (c[p.risk.level] += 1));
     return c;
   }, [withRisk]);
 
   const rows = useMemo(() => {
-    if (riskFilter === "all") return withRisk;
-    return withRisk.filter((p) => p.risk === riskFilter);
-  }, [withRisk, riskFilter]);
+    let r = withRisk;
+    if (warRoom) r = r.filter((p) => p.risk.level !== "low");
+    if (riskFilter !== "all") r = r.filter((p) => p.risk.level === riskFilter);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      r = r.filter((p) =>
+        [p.lab, p.project, p.capabilityGap, p.credentialBar, p.country, p.language, p.productType, p.benchmarkTarget]
+          .filter(Boolean)
+          .some((s) => s.toLowerCase().includes(q))
+      );
+    }
+    return r;
+  }, [withRisk, warRoom, riskFilter, search]);
 
-  const median = (arr) => {
-    const s = [...arr].sort((a, b) => a - b);
-    const m = Math.floor(s.length / 2);
-    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-  };
-  const ptrMedian = median(withRisk.map((p) => p.perTestRewardAvg));
+  const ptrMedian = useMemo(() => {
+    const arr = withRisk.map((p) => p.perTestRewardAvg).sort((a, b) => a - b);
+    if (arr.length === 0) return 0;
+    const m = Math.floor(arr.length / 2);
+    return arr.length % 2 ? arr[m] : (arr[m - 1] + arr[m]) / 2;
+  }, [withRisk]);
 
-  const shippingThisWeek = withRisk.filter((p) => {
-    const m = p.deadlineLabel.match(/^(\d+)([hd])$/);
-    if (!m) return false;
-    const n = parseInt(m[1], 10);
-    return m[2] === "h" ? true : n <= 7;
-  }).length;
+  const shippingThisWeek = withRisk.filter((p) => p.risk.hoursToDeadline <= 7 * 24).length;
+  const atRisk = counts.high + counts.medium;
+  const critical = counts.high;
 
+  /* AI */
   async function runAIAssessment(p) {
     setAiState((s) => ({ ...s, [p.id]: { loading: true } }));
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "risk", project: p }),
+        body: JSON.stringify({ type: "risk", project: p, risk: p.risk }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Request failed");
-      setAiState((s) => ({ ...s, [p.id]: { loading: false, text: data.summary, action: data.action } }));
+      setAiState((s) => ({ ...s, [p.id]: { loading: false, summary: data.summary, action: data.action } }));
     } catch (e) {
       setAiState((s) => ({ ...s, [p.id]: { loading: false, error: e.message } }));
     }
   }
 
-  async function runDraft(p, kind) {
-    setDraftOpen({ id: p.id, kind, loading: true, text: "" });
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: kind, project: p }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Request failed");
-      }
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let acc = "";
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        acc += decoder.decode(value, { stream: true });
-        setDraftOpen({ id: p.id, kind, loading: true, text: acc });
-      }
-      setDraftOpen({ id: p.id, kind, loading: false, text: acc });
-    } catch (e) {
-      setDraftOpen({ id: p.id, kind, loading: false, error: e.message, text: "" });
-    }
-  }
+  const draftLabels = {
+    researcher: "Lab-researcher update",
+    slack: "Slack alert",
+    calibration: "Calibration batch post",
+    weekly: "Weekly founder digest",
+    warroom: "Daily war-room brief",
+  };
 
-  async function runWeeklyDigest() {
-    setDraftOpen({ id: "portfolio", kind: "weekly", loading: true, text: "" });
+  async function runDraft(kind, payload) {
+    setDraft({ kind, label: draftLabels[kind], loading: true, text: "" });
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "weekly", projects: withRisk }),
+        body: JSON.stringify({ type: kind, ...payload }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -482,23 +469,21 @@ export default function Page() {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let acc = "";
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         acc += decoder.decode(value, { stream: true });
-        setDraftOpen({ id: "portfolio", kind: "weekly", loading: true, text: acc });
+        setDraft({ kind, label: draftLabels[kind], loading: true, text: acc });
       }
-      setDraftOpen({ id: "portfolio", kind: "weekly", loading: false, text: acc });
+      setDraft({ kind, label: draftLabels[kind], loading: false, text: acc });
     } catch (e) {
-      setDraftOpen({ id: "portfolio", kind: "weekly", loading: false, error: e.message, text: "" });
+      setDraft({ kind, label: draftLabels[kind], loading: false, error: e.message, text: "" });
     }
   }
 
   function toggleExpand(id) {
     setExpandedId((cur) => {
       const next = cur === id ? null : id;
-      // When a row closes (or a different one opens), clear the AI assessment for the row being closed
       if (cur && cur !== next) {
         setAiState((s) => {
           const copy = { ...s };
@@ -517,16 +502,39 @@ export default function Page() {
     setAddOpen(false);
   }
 
+  function updateProject(id, field, value) {
+    setProjects((curr) => curr.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
+  }
+
+  function deleteProject(id) {
+    setProjects((curr) => curr.filter((p) => p.id !== id));
+    setExpandedId(null);
+  }
+
   return (
     <div style={styles.page}>
-      <Header onWeekly={runWeeklyDigest} onAddProject={() => setAddOpen(true)} />
+      <ScenarioBanner />
+      <Header
+        critical={critical}
+        warRoom={warRoom}
+        setWarRoom={setWarRoom}
+        onWeekly={() => runDraft("weekly", { projects: withRisk })}
+        onWarRoomBrief={() => runDraft("warroom", { portfolio: withRisk })}
+        onAddProject={() => setAddOpen(true)}
+      />
       <MetricStrip
         active={withRisk.length}
-        atRisk={counts.high}
+        atRisk={atRisk}
         ptrMedian={ptrMedian}
         shipping={shippingThisWeek}
       />
-      <Toolbar riskFilter={riskFilter} setRiskFilter={setRiskFilter} counts={counts} />
+      <Toolbar
+        riskFilter={riskFilter}
+        setRiskFilter={setRiskFilter}
+        counts={counts}
+        search={search}
+        setSearch={setSearch}
+      />
       <Table
         rows={rows}
         expandedId={expandedId}
@@ -534,18 +542,37 @@ export default function Page() {
         aiState={aiState}
         runAIAssessment={runAIAssessment}
         runDraft={runDraft}
+        updateProject={updateProject}
+        deleteProject={deleteProject}
       />
       <Footer />
-      {draftOpen && <DraftModal state={draftOpen} close={() => setDraftOpen(null)} />}
+      {draft && <DraftModal state={draft} close={() => setDraft(null)} />}
       {addOpen && <AddProjectModal close={() => setAddOpen(false)} onSave={addProject} />}
     </div>
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// Pieces
-// ────────────────────────────────────────────────────────────────────
-function Header({ onWeekly, onAddProject }) {
+/* ────────────────────────────────────────────────────────────────────
+   Scenario banner
+   ──────────────────────────────────────────────────────────────────── */
+function ScenarioBanner() {
+  return (
+    <div style={styles.banner}>
+      <span style={styles.bannerDot} />
+      <span>
+        <strong style={{ fontWeight: 600 }}>Demo data, fabricated for interview purposes.</strong>{" "}
+        No real AfterQuery projects, contributors, or lab data displayed.
+      </span>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Header
+   ──────────────────────────────────────────────────────────────────── */
+function Header({ critical, warRoom, setWarRoom, onWeekly, onWarRoomBrief, onAddProject }) {
+  const dateStr = TODAY.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/Los_Angeles" });
+  const timeStr = TODAY.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Los_Angeles" });
   return (
     <header style={styles.header}>
       <div style={styles.logo}>
@@ -559,8 +586,24 @@ function Header({ onWeekly, onAddProject }) {
         <span style={styles.logoDivider} />
         <span style={styles.logoProduct}>SPL Ops Console</span>
       </div>
-      <div style={styles.headerActions}>
-        <button style={{ ...styles.btn, ...styles.btnSecondary }} onClick={onAddProject}>Add project</button>
+      <div style={styles.headerRight}>
+        <span style={styles.liveStrip}>
+          <span style={{ ...styles.livePulse, background: critical > 0 ? C.red : C.forest }} />
+          {critical > 0 ? `WAR ROOM · ${critical} CRITICAL · ${dateStr}` : `LIVE · ${dateStr} · ${timeStr} PT`}
+        </span>
+        <button
+          style={{ ...styles.btn, ...(warRoom ? styles.btnWarRoomActive : styles.btnSecondary) }}
+          onClick={() => setWarRoom((w) => !w)}
+          title="Filter to at-risk projects only, the shape of a daily standup"
+        >
+          {warRoom ? "Exit War Room" : "War Room"}
+        </button>
+        <button style={{ ...styles.btn, ...styles.btnSecondary }} onClick={onWarRoomBrief}>
+          Daily brief
+        </button>
+        <button style={{ ...styles.btn, ...styles.btnSecondary }} onClick={onAddProject}>
+          Add project
+        </button>
         <button style={{ ...styles.btn, ...styles.btnPrimary }} onClick={onWeekly}>
           Weekly founder digest →
         </button>
@@ -569,6 +612,9 @@ function Header({ onWeekly, onAddProject }) {
   );
 }
 
+/* ────────────────────────────────────────────────────────────────────
+   Hero metric strip
+   ──────────────────────────────────────────────────────────────────── */
 function MetricStrip({ active, atRisk, ptrMedian, shipping }) {
   return (
     <section style={styles.metrics}>
@@ -582,14 +628,17 @@ function MetricStrip({ active, atRisk, ptrMedian, shipping }) {
 
 function Metric({ num, label, last }) {
   return (
-    <div style={{ ...styles.metric, ...(last ? { borderRight: "none", paddingRight: 0 } : {}) }}>
+    <div style={{ ...styles.metric, ...(last ? { borderRight: "none" } : {}) }}>
       <div style={styles.metricNum}>{num}</div>
       <div style={styles.metricLabel}>{label}</div>
     </div>
   );
 }
 
-function Toolbar({ riskFilter, setRiskFilter, counts }) {
+/* ────────────────────────────────────────────────────────────────────
+   Toolbar (search + risk chips)
+   ──────────────────────────────────────────────────────────────────── */
+function Toolbar({ riskFilter, setRiskFilter, counts, search, setSearch }) {
   const chip = (val, label) => {
     const active = riskFilter === val;
     return (
@@ -597,13 +646,21 @@ function Toolbar({ riskFilter, setRiskFilter, counts }) {
         onClick={() => setRiskFilter(val)}
         style={{ ...styles.chip, ...(active ? styles.chipActive : {}) }}
       >
-        {label} <span style={{ ...styles.chipN, opacity: active ? 0.75 : 0.6 }}>{counts[val]}</span>
+        {label} <span style={{ ...styles.chipN, opacity: active ? 0.75 : 0.55 }}>{counts[val]}</span>
       </button>
     );
   };
   return (
     <section style={styles.toolbar}>
-      <div style={styles.toolbarTitle}>Projects</div>
+      <div style={styles.toolbarLeft}>
+        <div style={styles.toolbarTitle}>Projects</div>
+        <input
+          style={styles.search}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search lab, project, capability, credential…"
+        />
+      </div>
       <div style={styles.filters}>
         {chip("all", "All")}
         {chip("high", "High")}
@@ -614,7 +671,10 @@ function Toolbar({ riskFilter, setRiskFilter, counts }) {
   );
 }
 
-function Table({ rows, expandedId, toggleExpand, aiState, runAIAssessment, runDraft }) {
+/* ────────────────────────────────────────────────────────────────────
+   Table
+   ──────────────────────────────────────────────────────────────────── */
+function Table({ rows, expandedId, toggleExpand, aiState, runAIAssessment, runDraft, updateProject, deleteProject }) {
   return (
     <section style={styles.table}>
       <div style={{ ...styles.row, ...styles.tableHead }}>
@@ -627,29 +687,36 @@ function Table({ rows, expandedId, toggleExpand, aiState, runAIAssessment, runDr
         <div>Deadline</div>
         <div />
       </div>
-      {rows.map((p) => {
-        const expanded = expandedId === p.id;
-        return (
-          <RowGroup
-            key={p.id}
-            p={p}
-            expanded={expanded}
-            onToggle={() => toggleExpand(p.id)}
-            ai={aiState[p.id]}
-            runAIAssessment={runAIAssessment}
-            runDraft={runDraft}
-          />
-        );
-      })}
+      {rows.length === 0 ? (
+        <div style={styles.emptyState}>No projects match the current filters.</div>
+      ) : (
+        rows.map((p) => {
+          const expanded = expandedId === p.id;
+          return (
+            <RowGroup
+              key={p.id}
+              p={p}
+              expanded={expanded}
+              onToggle={() => toggleExpand(p.id)}
+              ai={aiState[p.id]}
+              runAIAssessment={runAIAssessment}
+              runDraft={runDraft}
+              updateProject={updateProject}
+              deleteProject={deleteProject}
+            />
+          );
+        })
+      )}
     </section>
   );
 }
 
-function RowGroup({ p, expanded, onToggle, ai, runAIAssessment, runDraft }) {
-  const markerColor =
-    p.risk === "high" ? C.red : p.risk === "medium" ? C.amber : C.green;
+function RowGroup({ p, expanded, onToggle, ai, runAIAssessment, runDraft, updateProject, deleteProject }) {
+  const markerColor = p.risk.level === "high" ? C.red : p.risk.level === "medium" ? C.amber : C.green;
   const ptrColor =
     p.perTestRewardAvg < 0.4 ? C.red : p.perTestRewardAvg < 0.7 ? C.amber : C.green;
+  const dLabel = deadlineLabelShort(p);
+  const dSub = deadlineSub(p);
   return (
     <>
       <div
@@ -698,166 +765,560 @@ function RowGroup({ p, expanded, onToggle, ai, runAIAssessment, runDraft }) {
           </span>
         </div>
         <div style={styles.cellDeadline}>
-          {p.deadlineLabel}
-          <div style={styles.cellDeadlineSub}>{p.deadlineSub}</div>
+          {dLabel}
+          <div style={styles.cellDeadlineSub}>{dSub}</div>
         </div>
         <div style={{ ...styles.cellCaret, transform: expanded ? "rotate(180deg)" : "none" }}>▾</div>
       </div>
-      {expanded && <DetailPanel p={p} ai={ai} runAIAssessment={runAIAssessment} runDraft={runDraft} />}
+      {expanded && (
+        <DetailPanel
+          p={p}
+          ai={ai}
+          runAIAssessment={runAIAssessment}
+          runDraft={runDraft}
+          updateProject={updateProject}
+          deleteProject={deleteProject}
+        />
+      )}
     </>
   );
 }
 
-function DetailPanel({ p, ai, runAIAssessment, runDraft }) {
-  const pct = (p.completed / p.targetTasks) * 100;
-  const flagRate = (p.rubricFlagCount / Math.max(1, p.completedOrFlagged)) * 100;
-  const ptrColor =
-    p.perTestRewardAvg < 0.4 ? C.red : p.perTestRewardAvg < 0.7 ? C.amber : C.green;
+/* ────────────────────────────────────────────────────────────────────
+   Detail panel (the heart of the depth port from Mercor)
+   ──────────────────────────────────────────────────────────────────── */
+function DetailPanel({ p, ai, runAIAssessment, runDraft, updateProject, deleteProject }) {
+  const teamSize = teamTotal(p.team) || p.expertCount || 0;
+  const burn = weeklyBurnUSD(p);
+  const tasksPerWeek = Math.round(tasksPerWeekPlanned(p));
+  const hoursToDeadline = p.risk.hoursToDeadline;
+  const ptrColor = p.perTestRewardAvg < 0.4 ? C.red : p.perTestRewardAvg < 0.7 ? C.amber : C.green;
+  const showFunnel = ["Scoping", "Sourcing", "Onboarding"].includes(p.status) && p.onboardingFunnel;
+  const showQuality = p.kappa != null || p.status === "In-Production" || p.status === "Rubric Review";
+
+  const lastUpdate = daysAgo(p.lastUpdateAt);
+  const lastQBR = daysAgo(p.lastQBRAt);
+
   return (
     <div style={styles.detail}>
-      <div style={styles.detailGrid}>
-        <DetailTile label="Projected delivery" value={p.deadlineSub.split(" · ")[0]} sub="vs. target" />
-        <DetailTile
-          label="Tasks"
-          value={
-            <>
-              {p.completed.toLocaleString()}
-              <span style={styles.tileUnit}> / {p.targetTasks.toLocaleString()}</span>
-            </>
-          }
-          sub={`${pct.toFixed(0)}% complete`}
-        />
-        <DetailTile
-          label="Per-test reward"
-          value={p.perTestRewardAvg.toFixed(2)}
-          sub={`Binary ${p.binaryPassRate.toFixed(2)}`}
-          subColor={ptrColor}
-        />
-        <DetailTile
-          label="Vetting pass rate"
-          value={
-            <>
-              {p.expertVettingPassRate}
-              <span style={styles.tileUnit}>%</span>
-            </>
-          }
-          sub={p.credentialBar}
-          subColor={p.expertVettingPassRate < 20 ? C.red : C.muted}
-        />
-        <DetailTile
-          label="Rubric flags"
-          value={
-            <>
-              {p.rubricFlagCount}
-              <span style={styles.tileUnit}> / {p.completedOrFlagged}</span>
-            </>
-          }
-          sub={`${flagRate.toFixed(1)}% flag rate`}
-          subColor={flagRate > 15 ? C.amber : C.muted}
-          last
-        />
-      </div>
+      <div style={styles.detailInner}>
+        <PipelineStrip status={p.status} />
 
-      <div style={styles.detailBody}>
-        <div>
-          <div style={styles.detailMeta}>
-            <MetaRow k="Capability" v={p.capabilityGap} />
-            <MetaRow k="Benchmark target" v={<code style={styles.code}>{p.benchmarkTarget}</code>} />
-            <MetaRow k="Credential bar" v={p.credentialBar} />
-            <MetaRow
-              k="Experts"
-              v={`${p.expertCount} active · $${p.avgHourlyRate}/hr median · ${p.source}`}
-            />
-            <MetaRow k="Modality" v={p.modality} />
-            <MetaRow k="Status" v={<code style={styles.code}>{p.status}</code>} />
-            <MetaRow k="Region" v={`${p.region} · ${p.language}`} />
-            <MetaRow k="Deadline" v={p.deadlineSub} />
+        {/* Capability + failure mode */}
+        <div style={styles.contextGrid}>
+          <div style={{ ...styles.contextCard, borderLeftColor: C.ink }}>
+            <div style={styles.contextLabel}>Capability gap</div>
+            <div style={styles.contextBody}>{p.capabilityGap}</div>
           </div>
+          {p.failureMode && (
+            <div style={{ ...styles.contextCard, borderLeftColor: C.red }}>
+              <div style={{ ...styles.contextLabel, color: C.red }}>Failure mode</div>
+              <div style={styles.contextBody}>{p.failureMode}</div>
+            </div>
+          )}
+        </div>
 
-          <div style={styles.draftActions}>
+        {/* Outcome strip: 6 tiles */}
+        <div style={styles.outcomeStrip}>
+          <OutcomeTile label="Projected" value={deadlineSub(p)} sub={`${Math.max(0, Math.round(hoursToDeadline / 24))}d remaining`} />
+          <OutcomeTile
+            label="Tasks"
+            value={`${p.completed.toLocaleString()} / ${p.targetTasks.toLocaleString()}`}
+            sub={`${Math.round(p.risk.completionPct)}% delivered`}
+          />
+          <OutcomeTile
+            label="Per-test reward"
+            value={p.perTestRewardAvg.toFixed(2)}
+            sub={`Binary ${p.binaryPassRate.toFixed(2)}`}
+            valueColor={ptrColor}
+          />
+          <OutcomeTile
+            label="Vetting pass"
+            value={`${p.expertVettingPassRate}%`}
+            sub={p.expertVettingPassRate < 20 ? "below the 20% band" : "within band"}
+            warn={p.expertVettingPassRate < 20}
+          />
+          <OutcomeTile
+            label="Weekly burn"
+            value={fmtMoney(burn)}
+            sub={
+              p.pricingModel === "per_task"
+                ? `${tasksPerWeek}/wk · $${(p.taskRate || 0).toLocaleString()}/task`
+                : `${teamSize} active · $${p.avgHourlyRate}/hr`
+            }
+            last
+          />
+        </div>
+
+        {/* Team layer + ramp plan */}
+        <TeamLayerBar team={p.team} risk={p.risk} />
+        <RampPlanCard project={p} risk={p.risk} />
+        {showQuality && <QualitySignalCard project={p} />}
+        {showFunnel && <OnboardingFunnelCard project={p} />}
+
+        {/* Body: AI panel + metadata */}
+        <div style={styles.detailBody}>
+          <AIPanel p={p} ai={ai} onGenerate={() => runAIAssessment(p)} />
+          <div style={styles.metaCol}>
+            <MetaRow k="Product" v={p.productType} />
+            <MetaRow k="Benchmark" v={<code style={styles.code}>{p.benchmarkTarget}</code>} />
+            <MetaRow k="Domain" v={p.domain} />
+            <MetaRow k="Credential bar" v={p.credentialBar} />
+            <MetaRow k="Modality" v={p.modality} />
+            <MetaRow
+              k="Status"
+              v={
+                <InlineSelect
+                  value={p.status}
+                  options={STATUSES}
+                  onChange={(v) => updateProject(p.id, "status", v)}
+                />
+              }
+            />
+            <MetaRow
+              k="Pricing"
+              v={
+                <InlineSelect
+                  value={PRICING_MODELS.find((m) => m.key === (p.pricingModel || "hourly")).label}
+                  options={PRICING_MODELS.map((m) => m.label)}
+                  onChange={(v) => {
+                    const m = PRICING_MODELS.find((x) => x.label === v);
+                    updateProject(p.id, "pricingModel", m.key);
+                    if (m.key === "per_task" && (p.taskRate == null || p.taskRate === 0)) {
+                      updateProject(p.id, "taskRate", 1000);
+                    }
+                  }}
+                />
+              }
+            />
+            {p.pricingModel === "per_task" ? (
+              <MetaRow
+                k="Rate"
+                v={
+                  <InlineNumber
+                    value={p.taskRate || 0}
+                    onChange={(v) => updateProject(p.id, "taskRate", v)}
+                    suffix=" $/task"
+                  />
+                }
+              />
+            ) : (
+              <MetaRow
+                k="Rate"
+                v={
+                  <InlineNumber
+                    value={p.avgHourlyRate}
+                    onChange={(v) => updateProject(p.id, "avgHourlyRate", v)}
+                    suffix=" $/hr"
+                  />
+                }
+              />
+            )}
+            <MetaRow
+              k="Researcher"
+              v={p.primaryResearcher ? `${p.primaryResearcher.name}, ${p.primaryResearcher.role}` : "—"}
+            />
+            <MetaRow
+              k="Last QBR"
+              v={lastQBR != null ? `${Math.round(lastQBR)}d ago` : "—"}
+              warn={lastQBR != null && lastQBR > 30}
+            />
+            <MetaRow
+              k="Last update"
+              v={lastUpdate != null ? `${Math.round(lastUpdate)}d ago` : "—"}
+              warn={lastUpdate != null && lastUpdate > 3}
+            />
+            <MetaRow k="Source" v={p.source} />
+            <MetaRow k="Region" v={`${p.country} · ${p.region}`} />
+            <MetaRow k="Language" v={p.language} />
+            <MetaRow k="Timezone" v={p.timezone} />
+          </div>
+        </div>
+
+        {/* Action bar */}
+        <div style={styles.actionBar}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
-              style={{ ...styles.btn, ...styles.btnPrimary, fontSize: 12.5 }}
-              onClick={() => runDraft(p, "researcher")}
+              style={{ ...styles.btn, ...styles.btnPrimary, fontSize: 12.5, padding: "9px 16px" }}
+              onClick={() => runDraft("researcher", { project: p, risk: p.risk })}
             >
               Draft lab-researcher update →
             </button>
             <button
-              style={{ ...styles.btn, ...styles.btnSecondary, fontSize: 12.5 }}
-              onClick={() => runDraft(p, "slack")}
+              style={{ ...styles.btn, ...styles.btnSecondary, fontSize: 12.5, padding: "9px 16px" }}
+              onClick={() => runDraft("slack", { project: p, risk: p.risk })}
             >
               Draft Slack alert
             </button>
+            <button
+              style={{ ...styles.btn, ...styles.btnSecondary, fontSize: 12.5, padding: "9px 16px" }}
+              onClick={() => runDraft("calibration", { project: p, risk: p.risk })}
+            >
+              Calibration post
+            </button>
           </div>
+          <RemoveButton onConfirm={() => deleteProject(p.id)} />
         </div>
-
-        <AIPanel p={p} ai={ai} onGenerate={() => runAIAssessment(p)} />
       </div>
     </div>
   );
 }
 
-function DetailTile({ label, value, sub, subColor, last }) {
+function OutcomeTile({ label, value, sub, valueColor, warn, last }) {
   return (
+    <div style={{ ...styles.outcomeTile, borderRight: last ? "none" : `1px solid ${C.hair}` }}>
+      <div style={styles.tileLabel}>{label}</div>
+      <div style={{ ...styles.tileVal, color: valueColor || (warn ? C.red : C.ink) }}>{value}</div>
+      {sub && (
+        <div style={{ ...styles.tileSub, color: warn ? C.red : C.muted }}>{sub}</div>
+      )}
+    </div>
+  );
+}
+
+function MetaRow({ k, v, warn }) {
+  return (
+    <div style={styles.metaRow}>
+      <div style={styles.metaK}>{k}</div>
+      <div style={{ ...styles.metaV, color: warn ? C.red : C.ink }}>{v}</div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Pipeline stage strip
+   ──────────────────────────────────────────────────────────────────── */
+function PipelineStrip({ status }) {
+  const idx = STATUSES.indexOf(status);
+  return (
+    <div style={styles.pipeline}>
+      {STATUSES.map((s, i) => {
+        const past = i < idx;
+        const current = i === idx;
+        const bg = current ? C.ink : past ? C.cream3 : "transparent";
+        const color = current ? "#fff" : past ? C.ink : C.muted2;
+        return (
+          <div
+            key={s}
+            style={{
+              ...styles.pipelineCell,
+              background: bg,
+              color,
+              borderLeft: i > 0 ? `1px solid ${C.hair}` : "none",
+              fontWeight: current ? 600 : 500,
+            }}
+          >
+            <span style={{ marginRight: 6, fontFamily: F.mono, fontSize: 9, opacity: 0.7 }}>
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            {s}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Team Layer bar
+   ──────────────────────────────────────────────────────────────────── */
+function TeamLayerBar({ team, risk }) {
+  const w = team?.writers || 0;
+  const r = team?.reviewers || 0;
+  const sr = team?.superReviewers || 0;
+  const tl = team?.teamLeads || 0;
+  const total = w + r + sr + tl;
+  if (total === 0) return null;
+
+  const reviewerTotal = r + sr;
+  const ratioLabel = reviewerTotal > 0 ? `1:${(w / reviewerTotal).toFixed(1)}` : "—";
+  const ratioBad = risk.reviewerRatio > 6;
+  const queueBad = risk.queueDepth > 10;
+
+  const segs = [
+    { key: "Writers", count: w, color: C.ink },
+    { key: "Reviewers", count: r, color: C.muted },
+    { key: "Super-reviewers", count: sr, color: C.amber },
+    { key: "Team leads", count: tl, color: C.forest },
+  ];
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.cardHead}>
+        <div style={styles.cardLabel}>Team layers</div>
+        <div style={styles.cardMeta}>
+          <span>
+            REV:WRITER{" "}
+            <strong style={{ color: ratioBad ? C.red : C.ink, fontFamily: F.mono }}>{ratioLabel}</strong>
+            <span style={{ color: C.muted2 }}> (tgt 1:5)</span>
+          </span>
+          <span style={{ marginLeft: 18 }}>
+            REVIEW QUEUE{" "}
+            <strong style={{ color: queueBad ? C.red : C.ink, fontFamily: F.mono }}>{risk.queueDepth}</strong>
+          </span>
+        </div>
+      </div>
+      <div style={styles.teamBar}>
+        {segs.map((s) =>
+          s.count > 0 ? (
+            <div key={s.key} style={{ flex: s.count, background: s.color, height: "100%" }} />
+          ) : null
+        )}
+      </div>
+      <div style={styles.teamLegend}>
+        {segs.map((s) => (
+          <div key={s.key} style={styles.teamLegendItem}>
+            <span style={{ ...styles.teamLegendSwatch, background: s.color }} />
+            <span>
+              <strong style={{ fontFamily: F.mono, color: C.ink }}>{s.count}</strong> {s.key}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Ramp Plan card
+   ──────────────────────────────────────────────────────────────────── */
+function RampPlanCard({ project, risk }) {
+  if (!project.rampPlan || project.rampPlan.length === 0) return null;
+  const start = new Date(project.startDate);
+  const weeksElapsed = Math.max(0, (TODAY - start) / (7 * 864e5));
+  const maxTarget = project.rampPlan[project.rampPlan.length - 1].targetCumulative;
+
+  const expected = Math.round(risk.rampTargetNow);
+  const actual = project.completed;
+  const behind = expected - actual;
+  const behindColor =
+    behind <= 0 ? C.forest : risk.rampPctBehind > 30 ? C.red : risk.rampPctBehind > 15 ? C.amber : C.ink;
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.cardHead}>
+        <div style={styles.cardLabel}>Ramp plan · expected vs actual</div>
+        <div style={styles.cardMeta}>
+          WEEK <strong style={{ fontFamily: F.mono, color: C.ink }}>{Math.ceil(weeksElapsed)}</strong> /{" "}
+          {project.rampPlan.length - 1}
+        </div>
+      </div>
+      <div style={styles.rampBars}>
+        {project.rampPlan.slice(1).map((wk, i) => {
+          const past = i + 1 <= weeksElapsed;
+          const current = Math.ceil(weeksElapsed) === i + 1;
+          return (
+            <div key={i} style={{ flex: 1 }}>
+              <div
+                style={{
+                  ...styles.rampCell,
+                  background: past ? C.cream3 : "transparent",
+                  borderColor: current ? C.ink : C.hair,
+                }}
+              >
+                <div
+                  style={{
+                    ...styles.rampFill,
+                    width: `${Math.min(100, (wk.targetCumulative / maxTarget) * 100)}%`,
+                    background: current ? C.ink : past ? C.muted : C.muted2,
+                    opacity: past ? 0.55 : 0.3,
+                  }}
+                />
+                <div style={styles.rampWeekLabel}>W{i + 1}</div>
+                <div
+                  style={{
+                    ...styles.rampWeekVal,
+                    color: current ? C.ink : C.inkSoft,
+                  }}
+                >
+                  {wk.targetCumulative.toLocaleString()}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={styles.rampSummary}>
+        <RampStat label="Expected" value={expected.toLocaleString()} />
+        <RampStat label="Actual" value={actual.toLocaleString()} />
+        <RampStat
+          label={behind > 0 ? "Behind by" : "Ahead by"}
+          value={
+            <>
+              {Math.abs(behind).toLocaleString()}
+              <span style={styles.rampPct}>
+                {" "}
+                · {expected > 0 ? Math.round((actual / expected) * 100) : 100}%
+              </span>
+            </>
+          }
+          color={behindColor}
+        />
+      </div>
+    </div>
+  );
+}
+
+function RampStat({ label, value, color }) {
+  return (
+    <div>
+      <div style={styles.rampStatLabel}>{label}</div>
+      <div style={{ ...styles.rampStatVal, color: color || C.ink }}>{value}</div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Quality Signals card
+   ──────────────────────────────────────────────────────────────────── */
+function QualitySignalCard({ project }) {
+  const k = project.kappa;
+  const one = project.oneShotRate;
+  const rpt = project.reviewsPerTask;
+  const aht = project.aht;
+  const ahtT = project.ahtTarget;
+  const flagged = project.rubricFlagCount;
+  const total = project.completed + (flagged || 0);
+  const flagRate = total > 0 ? (flagged / total) * 100 : 0;
+
+  const cell = (label, val, warn, sub, lastCell) => (
     <div
       style={{
-        ...styles.detailTile,
-        ...(last ? { borderRight: "none" } : {}),
+        ...styles.qualCell,
+        borderRight: lastCell ? "none" : `1px solid ${C.hair}`,
       }}
     >
       <div style={styles.tileLabel}>{label}</div>
-      <div style={styles.tileVal}>{value}</div>
-      {sub && <div style={{ ...styles.tileSub, color: subColor || C.muted }}>{sub}</div>}
+      <div style={{ ...styles.tileVal, fontSize: 30, color: warn ? C.red : C.ink }}>{val}</div>
+      {sub && <div style={{ ...styles.tileSub, color: C.muted }}>{sub}</div>}
     </div>
   );
-}
 
-function MetaRow({ k, v }) {
   return (
-    <div>
-      <div style={styles.metaK}>{k}</div>
-      <div style={styles.metaV}>{v}</div>
+    <div style={{ ...styles.card, padding: 0 }}>
+      <div style={{ ...styles.cardHead, padding: "12px 18px" }}>
+        <div style={styles.cardLabel}>Quality signals</div>
+      </div>
+      <div style={styles.qualGrid}>
+        {cell(
+          "Kappa (IAA)",
+          k != null ? k.toFixed(2) : "—",
+          k != null && k < 0.7,
+          k != null ? (k >= 0.7 ? "above 0.7 target" : "below 0.7 target") : "n/a"
+        )}
+        {cell("One-shot", one != null ? `${one}%` : "—", one != null && one < 70, "70% bar")}
+        {cell("Reviews/task", rpt != null ? rpt.toFixed(1) : "—", rpt > 3, "tgt ≤ 2")}
+        {cell("AHT (hrs)", aht != null ? aht.toFixed(1) : "—", aht && ahtT && aht > ahtT * 1.2, `${ahtT}h target`)}
+        {cell("Flag rate", `${Math.round(flagRate)}%`, flagRate > 15, `${flagged || 0} flagged`, true)}
+      </div>
     </div>
   );
 }
 
+/* ────────────────────────────────────────────────────────────────────
+   Onboarding Funnel card
+   ──────────────────────────────────────────────────────────────────── */
+function OnboardingFunnelCard({ project }) {
+  const f = project.onboardingFunnel;
+  if (!f) return null;
+  const stages = [
+    { key: "Applicants", val: f.applicants },
+    { key: "Approved", val: f.approved },
+    { key: "Onboarded", val: f.onboarded },
+    { key: "Active", val: f.active },
+    { key: "QC-passed", val: f.qcPassed },
+    { key: "Retained", val: f.retained },
+  ];
+  const ttft = project.timeToFirstTask || 0;
+  const ttftBad = ttft > 48;
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.cardHead}>
+        <div style={styles.cardLabel}>Onboarding funnel</div>
+        <div style={styles.cardMeta}>
+          TIME-TO-FIRST-TASK{" "}
+          <strong style={{ color: ttftBad ? C.red : C.ink, fontFamily: F.mono }}>{ttft}h</strong>
+          <span style={{ color: C.muted2 }}> (tgt &lt; 48h)</span>
+        </div>
+      </div>
+      <div style={styles.funnel}>
+        {stages.map((s, i) => {
+          const prev = i > 0 ? stages[i - 1].val : null;
+          const conv = prev && prev > 0 ? (s.val / prev) * 100 : null;
+          const convWarn = conv != null && conv < 55;
+          const max = stages[0].val;
+          const h = max > 0 ? (s.val / max) * 100 : 0;
+          return (
+            <div key={s.key} style={styles.funnelGroup}>
+              <div style={styles.funnelStage}>
+                <div
+                  style={{
+                    ...styles.funnelBar,
+                    height: `${Math.max(20, h * 0.55 + 14)}px`,
+                    background: i === stages.length - 1 ? C.ink : C.cream3,
+                    color: i === stages.length - 1 ? "#fff" : C.ink,
+                  }}
+                >
+                  {s.val.toLocaleString()}
+                </div>
+                <div style={styles.funnelLabel}>{s.key}</div>
+              </div>
+              {i < stages.length - 1 && (
+                <div style={styles.funnelArrow}>
+                  <div
+                    style={{
+                      fontFamily: F.mono,
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: convWarn ? C.red : C.muted,
+                    }}
+                  >
+                    {conv != null ? `${Math.round(conv)}%` : ""}
+                  </div>
+                  <div style={{ color: C.muted2 }}>→</div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   AI panel
+   ──────────────────────────────────────────────────────────────────── */
 function AIPanel({ p, ai, onGenerate }) {
-  const hasContent = !!(ai && ai.text);
+  const hasContent = !!(ai && ai.summary);
   const loading = !!(ai && ai.loading);
   const errored = !!(ai && ai.error);
 
-  // Realistic-looking placeholder content, blurred behind the generate pill.
-  const placeholderBody = `Per-test reward at ${p.perTestRewardAvg.toFixed(
-    2
-  )} with binary pass rate at ${p.binaryPassRate.toFixed(
-    2
-  )} suggests the rubric is grading trajectory shape but not terminal state. Rubric-coverage problem, not a contributor problem.`;
+  const placeholderBody = `Per-test reward at ${p.perTestRewardAvg.toFixed(2)} with binary pass rate at ${p.binaryPassRate.toFixed(2)} suggests the rubric is grading trajectory shape but not terminal state. Rubric-coverage problem, not a contributor problem.`;
   const placeholderAction =
-    "Run Docent over last 48 failed trajectories, cluster on tool-selection errors, extend verifier test suite before opening a new sourcing wave.";
+    "Run Docent over last 48 failed trajectories, cluster on tool-selection errors, extend the verifier test suite before opening a new sourcing wave.";
 
   return (
     <div style={styles.aiPanel}>
       <div style={styles.aiPanelHeader}>
-        <span style={styles.aiPanelHeaderLabel}>AI Assessment</span>
+        <span style={styles.aiPanelHeaderLabel}>AI assessment</span>
         <span style={styles.aiPanelHeaderMeta}>Claude Sonnet 4.6</span>
       </div>
-
       <div style={styles.aiPanelInner}>
-        {/* Content layer, blurred until generated */}
         <div
           style={{
             ...styles.aiContent,
             filter: hasContent ? "none" : "blur(5px)",
-            opacity: hasContent ? 1 : 0.6,
+            opacity: hasContent ? 1 : 0.55,
           }}
         >
-          <div style={styles.aiBody}>{hasContent ? ai.text : placeholderBody}</div>
+          <div style={styles.aiBody}>{hasContent ? ai.summary : placeholderBody}</div>
           <div style={styles.aiAction}>
             <strong style={{ color: C.ink, fontWeight: 500 }}>Recommended action. </strong>
             {hasContent ? ai.action : placeholderAction}
           </div>
         </div>
-
-        {/* Overlay pill, visible until content exists */}
         {!hasContent && (
           <div style={styles.aiOverlay}>
             {errored ? (
@@ -886,172 +1347,371 @@ function AIPanel({ p, ai, onGenerate }) {
   );
 }
 
+/* ────────────────────────────────────────────────────────────────────
+   Inline editing primitives
+   ──────────────────────────────────────────────────────────────────── */
+function InlineNumber({ value, onChange, suffix = "", min = 0, max = 99999, step = 1 }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (editing && ref.current) ref.current.select();
+  }, [editing]);
+
+  if (!editing) {
+    return (
+      <span
+        onClick={(e) => {
+          e.stopPropagation();
+          setDraft(value);
+          setEditing(true);
+        }}
+        style={styles.inlineEditable}
+        title="Click to edit"
+      >
+        {value}
+        {suffix}
+      </span>
+    );
+  }
+  return (
+    <input
+      ref={ref}
+      type="number"
+      min={min}
+      max={max}
+      step={step}
+      value={draft}
+      onClick={(e) => e.stopPropagation()}
+      onChange={(e) => setDraft(Number(e.target.value))}
+      onBlur={() => {
+        onChange(Math.max(min, Math.min(max, draft)));
+        setEditing(false);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          onChange(Math.max(min, Math.min(max, draft)));
+          setEditing(false);
+        }
+        if (e.key === "Escape") setEditing(false);
+      }}
+      style={styles.inlineInput}
+    />
+  );
+}
+
+function InlineSelect({ value, options, onChange }) {
+  const [editing, setEditing] = useState(false);
+  if (!editing) {
+    return (
+      <span
+        onClick={(e) => {
+          e.stopPropagation();
+          setEditing(true);
+        }}
+        style={styles.inlineEditable}
+        title="Click to edit"
+      >
+        {value}
+      </span>
+    );
+  }
+  return (
+    <select
+      value={value}
+      onClick={(e) => e.stopPropagation()}
+      onChange={(e) => {
+        onChange(e.target.value);
+        setEditing(false);
+      }}
+      onBlur={() => setEditing(false)}
+      autoFocus
+      style={styles.inlineInput}
+    >
+      {options.map((o) => (
+        <option key={o} value={o}>
+          {o}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Remove confirm
+   ──────────────────────────────────────────────────────────────────── */
+function RemoveButton({ onConfirm }) {
+  const [armed, setArmed] = useState(false);
+  if (!armed) {
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setArmed(true);
+        }}
+        style={styles.removeGhost}
+      >
+        Remove project
+      </button>
+    );
+  }
+  return (
+    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+      <span style={{ fontSize: 11, color: C.red, fontFamily: F.mono, letterSpacing: "0.04em" }}>
+        Remove?
+      </span>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onConfirm();
+        }}
+        style={{
+          ...styles.btn,
+          background: C.red,
+          color: "#fff",
+          fontSize: 11,
+          padding: "5px 12px",
+        }}
+      >
+        Delete
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setArmed(false);
+        }}
+        style={{
+          ...styles.btn,
+          ...styles.btnSecondary,
+          fontSize: 11,
+          padding: "5px 12px",
+        }}
+      >
+        Cancel
+      </button>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Add Project Modal
+   ──────────────────────────────────────────────────────────────────── */
 function AddProjectModal({ close, onSave }) {
+  const today = new Date().toISOString().split("T")[0];
   const [form, setForm] = useState({
     lab: "",
     project: "",
     capabilityGap: "",
+    failureMode: "",
     productType: "SFT + CoT Demonstrations",
     benchmarkTarget: "Custom",
+    domain: "Software Engineering",
     credentialBar: "",
     modality: "Text",
-    targetTasks: 100,
+    targetTasks: 500,
     completed: 0,
-    expertVettingPassRate: 20,
     perTestRewardAvg: 0.6,
     binaryPassRate: 0.4,
+    expertVettingPassRate: 22,
     rubricFlagCount: 0,
-    completedOrFlagged: 0,
     expertCount: 0,
-    avgHourlyRate: 100,
-    country: "US",
+    writers: 0,
+    reviewers: 0,
+    superReviewers: 0,
+    teamLeads: 0,
+    kappa: 0.75,
+    oneShotRate: 70,
+    reviewsPerTask: 2,
+    reviewQueueDepth: 0,
+    aht: 5,
+    ahtTarget: 5,
+    timeToFirstTask: 24,
+    pricingModel: "hourly",
+    avgHourlyRate: 150,
+    taskRate: 0,
+    primaryName: "",
+    primaryRole: "",
+    country: "United States",
     language: "English",
     region: "NAMER",
     timezone: "PT",
     source: "AfterQuery Experts Network",
-    status: "Scoping",
-    deadlineLabel: "14d",
-    deadlineSub: "",
+    status: "Sourcing",
+    startDate: today,
+    deadline: "",
   });
 
   const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const valid = form.lab.trim() && form.project.trim() && form.deadline;
 
   function handleSave(e) {
     e.preventDefault();
-    if (!form.lab.trim() || !form.project.trim()) return;
-    const normalized = {
-      ...form,
-      targetTasks: Number(form.targetTasks) || 0,
+    if (!valid) return;
+    const t = Number(form.targetTasks) || 0;
+    const isRubric = form.productType.includes("Rubric") || form.productType.includes("RLHF");
+    onSave({
+      lab: form.lab,
+      project: form.project,
+      capabilityGap: form.capabilityGap,
+      failureMode: form.failureMode,
+      productType: form.productType,
+      benchmarkTarget: form.benchmarkTarget,
+      domain: form.domain,
+      credentialBar: form.credentialBar,
+      modality: form.modality,
+      targetTasks: t,
       completed: Number(form.completed) || 0,
-      expertVettingPassRate: Number(form.expertVettingPassRate) || 0,
+      rampPlan: [
+        { week: 0, targetCumulative: 0 },
+        { week: 1, targetCumulative: Math.round(t * 0.1) },
+        { week: 2, targetCumulative: Math.round(t * 0.35) },
+        { week: 3, targetCumulative: Math.round(t * 0.7) },
+        { week: 4, targetCumulative: t },
+      ],
       perTestRewardAvg: Number(form.perTestRewardAvg) || 0,
       binaryPassRate: Number(form.binaryPassRate) || 0,
+      expertVettingPassRate: Number(form.expertVettingPassRate) || 0,
       rubricFlagCount: Number(form.rubricFlagCount) || 0,
-      completedOrFlagged:
-        Number(form.completedOrFlagged) || Number(form.completed) + Number(form.rubricFlagCount),
       expertCount: Number(form.expertCount) || 0,
+      team: {
+        writers: Number(form.writers) || 0,
+        reviewers: Number(form.reviewers) || 0,
+        superReviewers: Number(form.superReviewers) || 0,
+        teamLeads: Number(form.teamLeads) || 0,
+      },
+      kappa: isRubric ? Number(form.kappa) : null,
+      oneShotRate: Number(form.oneShotRate) || 0,
+      reviewsPerTask: Number(form.reviewsPerTask) || 0,
+      reviewQueueDepth: Number(form.reviewQueueDepth) || 0,
+      aht: Number(form.aht) || 0,
+      ahtTarget: Number(form.ahtTarget) || 0,
+      onboardingFunnel: null,
+      timeToFirstTask: Number(form.timeToFirstTask) || 0,
+      pricingModel: form.pricingModel,
       avgHourlyRate: Number(form.avgHourlyRate) || 0,
-    };
-    onSave(normalized);
+      taskRate: form.pricingModel === "per_task" ? Number(form.taskRate) || 0 : null,
+      primaryResearcher: form.primaryName.trim()
+        ? { name: form.primaryName.trim(), role: form.primaryRole.trim() || "Researcher" }
+        : null,
+      lastUpdateAt: new Date().toISOString(),
+      lastQBRAt: null,
+      country: form.country,
+      language: form.language,
+      region: form.region,
+      timezone: form.timezone,
+      source: form.source,
+      status: form.status,
+      startDate: form.startDate,
+      deadline: form.deadline,
+    });
   }
 
   return (
     <div style={styles.modalScrim} onClick={close}>
       <form
-        style={{ ...styles.modal, maxWidth: 880 }}
+        style={{ ...styles.modal, maxWidth: 920 }}
         onClick={(e) => e.stopPropagation()}
         onSubmit={handleSave}
       >
         <div style={styles.modalHead}>
-          <div style={styles.modalLabel}>New project</div>
-          <button type="button" style={styles.modalClose} onClick={close}>
-            ✕
-          </button>
+          <div>
+            <div style={styles.modalLabel}>NEW_PROJECT</div>
+            <div style={styles.modalTitle}>Onboard a new engagement</div>
+          </div>
+          <button type="button" style={styles.modalClose} onClick={close}>✕</button>
         </div>
 
         <div style={styles.formGrid}>
-          <Field label="Lab" wide>
+          <Field label="Lab">
             <select style={styles.input} value={form.lab} onChange={(e) => update("lab", e.target.value)} required>
               <option value="">Select…</option>
-              {["OpenAI", "Anthropic", "Google DeepMind", "Meta AI", "xAI", "Microsoft", "Apple", "Nvidia", "Amazon", "Cohere", "Mistral"].map(
-                (l) => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                )
-              )}
-            </select>
-          </Field>
-          <Field label="Project name" wide>
-            <input
-              style={styles.input}
-              value={form.project}
-              onChange={(e) => update("project", e.target.value)}
-              placeholder="e.g. Copilot Enterprise Excel Custom Eval"
-              required
-            />
-          </Field>
-
-          <Field label="Capability gap" wide full>
-            <textarea
-              style={{ ...styles.input, minHeight: 54, resize: "vertical" }}
-              value={form.capabilityGap}
-              onChange={(e) => update("capabilityGap", e.target.value)}
-              placeholder="What the data actually trains."
-            />
-          </Field>
-
-          <Field label="Product type">
-            <select style={styles.input} value={form.productType} onChange={(e) => update("productType", e.target.value)}>
-              {[
-                "SFT + CoT Demonstrations",
-                "Rubric & Verifier-based RL",
-                "Tool-calling RL Env",
-                "Computer-use Trajectories",
-                "Browser-use Trajectories",
-                "RLHF Preferences",
-                "Code Generation",
-                "Deep Research",
-                "Custom Eval",
-                "Multimodal Training",
-                "Loss Analysis",
-                "Trajectory Labeling",
-              ].map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Benchmark target">
-            <select style={styles.input} value={form.benchmarkTarget} onChange={(e) => update("benchmarkTarget", e.target.value)}>
-              {["Custom", "FinanceQA", "IDE-Bench", "Market-Bench", "App-Bench", "UI-Bench", "Terminal-Bench 2.0", "τ²-bench"].map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Credential bar" wide full>
-            <input
-              style={styles.input}
-              value={form.credentialBar}
-              onChange={(e) => update("credentialBar", e.target.value)}
-              placeholder="e.g. FAANG L6+, 5+ yr infra"
-            />
-          </Field>
-
-          <Field label="Modality">
-            <select style={styles.input} value={form.modality} onChange={(e) => update("modality", e.target.value)}>
-              {["Text", "Code", "Multi-turn Chat", "Tool-calling (API/MCP)", "Browser", "Desktop", "Image", "Audio", "Video"].map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
+              {LABS.map((l) => (
+                <option key={l} value={l}>{l}</option>
               ))}
             </select>
           </Field>
           <Field label="Status">
             <select style={styles.input} value={form.status} onChange={(e) => update("status", e.target.value)}>
-              {["Scoping", "Tooling Build", "Sourcing", "Onboarding", "In-Production", "Rubric Review", "Delivered"].map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
-              ))}
+              {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </Field>
 
+          <Field label="Project name" full>
+            <input
+              style={styles.input}
+              value={form.project}
+              onChange={(e) => update("project", e.target.value)}
+              placeholder="Copilot Enterprise Excel Custom Eval"
+              required
+            />
+          </Field>
+
+          <Field label="Capability gap" full>
+            <textarea
+              style={{ ...styles.input, minHeight: 56, resize: "vertical" }}
+              value={form.capabilityGap}
+              onChange={(e) => update("capabilityGap", e.target.value)}
+              placeholder="What the data actually trains."
+            />
+          </Field>
+          <Field label="Failure mode" full>
+            <textarea
+              style={{ ...styles.input, minHeight: 56, resize: "vertical" }}
+              value={form.failureMode}
+              onChange={(e) => update("failureMode", e.target.value)}
+              placeholder="What the model can't do today."
+            />
+          </Field>
+
+          <Field label="Product type">
+            <select
+              style={styles.input}
+              value={form.productType}
+              onChange={(e) => update("productType", e.target.value)}
+            >
+              {PRODUCT_TYPES.map((v) => <option key={v}>{v}</option>)}
+            </select>
+          </Field>
+          <Field label="Benchmark target">
+            <select
+              style={styles.input}
+              value={form.benchmarkTarget}
+              onChange={(e) => update("benchmarkTarget", e.target.value)}
+            >
+              {BENCHMARKS.map((v) => <option key={v}>{v}</option>)}
+            </select>
+          </Field>
+
+          <Field label="Domain">
+            <input style={styles.input} value={form.domain} onChange={(e) => update("domain", e.target.value)} />
+          </Field>
+          <Field label="Modality">
+            <select style={styles.input} value={form.modality} onChange={(e) => update("modality", e.target.value)}>
+              {MODALITIES.map((v) => <option key={v}>{v}</option>)}
+            </select>
+          </Field>
+
+          <Field label="Credential bar" full>
+            <input
+              style={styles.input}
+              value={form.credentialBar}
+              onChange={(e) => update("credentialBar", e.target.value)}
+              placeholder="MD, US board certified, 3+ yr clinical"
+            />
+          </Field>
+
           <Field label="Target tasks">
-            <input type="number" min="0" style={styles.input} value={form.targetTasks} onChange={(e) => update("targetTasks", e.target.value)} />
+            <input type="number" min="1" style={styles.input} value={form.targetTasks} onChange={(e) => update("targetTasks", e.target.value)} />
           </Field>
           <Field label="Completed">
             <input type="number" min="0" style={styles.input} value={form.completed} onChange={(e) => update("completed", e.target.value)} />
           </Field>
 
-          <Field label="Per-test reward (0-1)">
+          <Field label="Per-test reward (0–1)">
             <input type="number" min="0" max="1" step="0.01" style={styles.input} value={form.perTestRewardAvg} onChange={(e) => update("perTestRewardAvg", e.target.value)} />
           </Field>
-          <Field label="Binary pass rate (0-1)">
+          <Field label="Binary pass rate (0–1)">
             <input type="number" min="0" max="1" step="0.01" style={styles.input} value={form.binaryPassRate} onChange={(e) => update("binaryPassRate", e.target.value)} />
           </Field>
 
@@ -1062,20 +1722,66 @@ function AddProjectModal({ close, onSave }) {
             <input type="number" min="0" style={styles.input} value={form.rubricFlagCount} onChange={(e) => update("rubricFlagCount", e.target.value)} />
           </Field>
 
-          <Field label="Experts active">
-            <input type="number" min="0" style={styles.input} value={form.expertCount} onChange={(e) => update("expertCount", e.target.value)} />
+          <Field label="Writers">
+            <input type="number" min="0" style={styles.input} value={form.writers} onChange={(e) => update("writers", e.target.value)} />
           </Field>
-          <Field label="Avg hourly rate ($)">
-            <input type="number" min="0" style={styles.input} value={form.avgHourlyRate} onChange={(e) => update("avgHourlyRate", e.target.value)} />
+          <Field label="Reviewers">
+            <input type="number" min="0" style={styles.input} value={form.reviewers} onChange={(e) => update("reviewers", e.target.value)} />
+          </Field>
+          <Field label="Super-reviewers">
+            <input type="number" min="0" style={styles.input} value={form.superReviewers} onChange={(e) => update("superReviewers", e.target.value)} />
+          </Field>
+          <Field label="Team leads">
+            <input type="number" min="0" style={styles.input} value={form.teamLeads} onChange={(e) => update("teamLeads", e.target.value)} />
+          </Field>
+
+          {(form.productType.includes("Rubric") || form.productType.includes("RLHF")) && (
+            <Field label="Kappa (IAA)">
+              <input type="number" min="0" max="1" step="0.01" style={styles.input} value={form.kappa} onChange={(e) => update("kappa", e.target.value)} />
+            </Field>
+          )}
+          <Field label="One-shot %">
+            <input type="number" min="0" max="100" style={styles.input} value={form.oneShotRate} onChange={(e) => update("oneShotRate", e.target.value)} />
+          </Field>
+          <Field label="Reviews/task">
+            <input type="number" min="0" step="0.1" style={styles.input} value={form.reviewsPerTask} onChange={(e) => update("reviewsPerTask", e.target.value)} />
+          </Field>
+          <Field label="Review queue">
+            <input type="number" min="0" style={styles.input} value={form.reviewQueueDepth} onChange={(e) => update("reviewQueueDepth", e.target.value)} />
+          </Field>
+
+          <Field label="AHT (hrs)">
+            <input type="number" min="0" step="0.1" style={styles.input} value={form.aht} onChange={(e) => update("aht", e.target.value)} />
+          </Field>
+          <Field label="AHT target (hrs)">
+            <input type="number" min="0" step="0.1" style={styles.input} value={form.ahtTarget} onChange={(e) => update("ahtTarget", e.target.value)} />
+          </Field>
+
+          <Field label="Pricing model">
+            <select style={styles.input} value={form.pricingModel} onChange={(e) => update("pricingModel", e.target.value)}>
+              {PRICING_MODELS.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
+            </select>
+          </Field>
+          {form.pricingModel === "hourly" ? (
+            <Field label="Hourly rate ($)">
+              <input type="number" min="0" style={styles.input} value={form.avgHourlyRate} onChange={(e) => update("avgHourlyRate", e.target.value)} />
+            </Field>
+          ) : (
+            <Field label="Rate ($/task)">
+              <input type="number" min="0" style={styles.input} value={form.taskRate} onChange={(e) => update("taskRate", e.target.value)} />
+            </Field>
+          )}
+
+          <Field label="Researcher name">
+            <input style={styles.input} value={form.primaryName} onChange={(e) => update("primaryName", e.target.value)} placeholder="Maya Rao" />
+          </Field>
+          <Field label="Researcher role">
+            <input style={styles.input} value={form.primaryRole} onChange={(e) => update("primaryRole", e.target.value)} placeholder="MTS, RL Trajectory" />
           </Field>
 
           <Field label="Source">
             <select style={styles.input} value={form.source} onChange={(e) => update("source", e.target.value)}>
-              {["AfterQuery Experts Network", "Community Referral", "Lab BYO Roster", "Partner Vendor", "Mixed"].map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
-              ))}
+              {SOURCES.map((s) => <option key={s}>{s}</option>)}
             </select>
           </Field>
           <Field label="Region">
@@ -1089,11 +1795,11 @@ function AddProjectModal({ close, onSave }) {
             <input style={styles.input} value={form.language} onChange={(e) => update("language", e.target.value)} />
           </Field>
 
-          <Field label="Deadline label">
-            <input style={styles.input} value={form.deadlineLabel} onChange={(e) => update("deadlineLabel", e.target.value)} placeholder="e.g. 14d or 42h" />
+          <Field label="Start date">
+            <input type="date" style={styles.input} value={form.startDate} onChange={(e) => update("startDate", e.target.value)} />
           </Field>
-          <Field label="Deadline date">
-            <input style={styles.input} value={form.deadlineSub} onChange={(e) => update("deadlineSub", e.target.value)} placeholder="e.g. May 6 · 17:00 PT" />
+          <Field label="Deadline">
+            <input type="date" style={styles.input} value={form.deadline} onChange={(e) => update("deadline", e.target.value)} required />
           </Field>
         </div>
 
@@ -1101,8 +1807,15 @@ function AddProjectModal({ close, onSave }) {
           <button type="button" style={{ ...styles.btn, ...styles.btnSecondary }} onClick={close}>
             Cancel
           </button>
-          <button type="submit" style={{ ...styles.btn, ...styles.btnPrimary }}>
-            Add project →
+          <button
+            type="submit"
+            style={{
+              ...styles.btn,
+              ...(valid ? styles.btnPrimary : { background: C.cream3, color: C.muted2, cursor: "not-allowed" }),
+            }}
+            disabled={!valid}
+          >
+            Onboard project →
           </button>
         </div>
       </form>
@@ -1119,46 +1832,63 @@ function Field({ label, children, full }) {
   );
 }
 
+/* ────────────────────────────────────────────────────────────────────
+   Draft modal
+   ──────────────────────────────────────────────────────────────────── */
 function DraftModal({ state, close }) {
-  const label =
-    state.kind === "researcher"
-      ? "Lab-researcher update"
-      : state.kind === "slack"
-      ? "Slack alert"
-      : state.kind === "weekly"
-      ? "Weekly founder digest"
-      : "Draft";
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(state.text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    });
+  }
   return (
     <div style={styles.modalScrim} onClick={close}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div style={styles.modalHead}>
-          <div style={styles.modalLabel}>{label}</div>
-          <button style={styles.modalClose} onClick={close}>
-            ✕
-          </button>
+          <div>
+            <div style={styles.modalLabel}>{state.label}</div>
+            <div style={styles.modalTitle}>
+              {state.loading && !state.text ? "Drafting via Claude Sonnet 4.6" : state.label}
+            </div>
+          </div>
+          <button style={styles.modalClose} onClick={close}>✕</button>
         </div>
         {state.error ? (
-          <div style={styles.modalError}>{state.error}</div>
+          <div style={styles.modalError}>AI unavailable: {state.error}</div>
         ) : (
-          <pre style={styles.modalBody}>{state.text || (state.loading ? "Drafting…" : "")}</pre>
+          <pre style={styles.modalBody}>
+            {state.text || (state.loading ? "Drafting…" : "")}
+          </pre>
+        )}
+        {state.text && !state.error && (
+          <div style={styles.modalFooter}>
+            <button style={{ ...styles.btn, ...styles.btnSecondary, fontSize: 12 }} onClick={copy}>
+              {copied ? "Copied" : "Copy"}
+            </button>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
+/* ────────────────────────────────────────────────────────────────────
+   Footer
+   ──────────────────────────────────────────────────────────────────── */
 function Footer() {
   return (
     <footer style={styles.footer}>
       <div>AFTERQUERY SPL OPS CONSOLE · APPLICATION ARTIFACT · ZI</div>
-      <div>v0.2 · local</div>
+      <div>Claude Sonnet 4.6 · 12-signal deterministic risk engine</div>
     </footer>
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// Styles
-// ────────────────────────────────────────────────────────────────────
+/* ────────────────────────────────────────────────────────────────────
+   Styles
+   ──────────────────────────────────────────────────────────────────── */
 const styles = {
   page: {
     background: C.cream,
@@ -1169,11 +1899,27 @@ const styles = {
     minHeight: "100vh",
     WebkitFontSmoothing: "antialiased",
   },
+  banner: {
+    background: C.cream2,
+    borderBottom: `1px solid ${C.hair}`,
+    padding: "8px 48px",
+    fontSize: 11.5,
+    color: C.inkSoft,
+    fontFamily: F.mono,
+    letterSpacing: "0.02em",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  bannerDot: { width: 5, height: 5, borderRadius: "50%", background: C.ink },
+
   header: {
     display: "grid",
-    gridTemplateColumns: "1fr auto",
+    gridTemplateColumns: "auto 1fr",
     alignItems: "center",
     padding: "22px 48px 20px",
+    gap: 24,
   },
   logo: {
     display: "flex",
@@ -1196,10 +1942,30 @@ const styles = {
     textTransform: "uppercase",
     color: C.muted,
   },
-  nav: { display: "flex", gap: 36, fontSize: 14, fontWeight: 500 },
-  navLink: { color: C.ink, textDecoration: "none", position: "relative" },
-  navActive: { borderBottom: `1px solid ${C.ink}`, paddingBottom: 2 },
-  headerActions: { display: "flex", justifyContent: "flex-end", gap: 8, alignItems: "center" },
+  headerRight: {
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: 8,
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  liveStrip: {
+    fontFamily: F.mono,
+    fontSize: 10.5,
+    color: C.muted,
+    letterSpacing: "0.04em",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 7,
+    marginRight: 10,
+  },
+  livePulse: {
+    width: 6,
+    height: 6,
+    borderRadius: "50%",
+    animation: "pulse 2s ease-in-out infinite",
+  },
+
   btn: {
     display: "inline-flex",
     alignItems: "center",
@@ -1215,20 +1981,14 @@ const styles = {
   },
   btnPrimary: { background: C.ink, color: "#fff" },
   btnSecondary: { background: C.cream3, color: C.ink },
-  btnGhost: {
-    background: "transparent",
-    color: C.muted,
-    padding: "9px 4px",
-    borderRadius: 0,
-    borderBottom: `1px solid ${C.hairStrong}`,
-  },
+  btnWarRoomActive: { background: C.red, color: "#fff" },
 
   metrics: {
     display: "grid",
     gridTemplateColumns: "repeat(4, 1fr)",
     borderTop: `1px solid ${C.hairStrong}`,
     borderBottom: `1px solid ${C.hairStrong}`,
-    margin: "56px 48px 0",
+    margin: "44px 48px 0",
   },
   metric: {
     padding: "44px 32px 40px 32px",
@@ -1255,16 +2015,29 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: "56px 48px 18px",
+    padding: "44px 48px 16px",
     gap: 24,
+    flexWrap: "wrap",
   },
+  toolbarLeft: { display: "flex", alignItems: "center", gap: 22 },
   toolbarTitle: {
     fontFamily: F.serif,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 400,
     fontVariationSettings: '"opsz" 36',
     letterSpacing: "-0.01em",
     color: C.ink,
+  },
+  search: {
+    width: 320,
+    background: C.cream,
+    border: `1px solid ${C.hairStrong}`,
+    borderRadius: 9999,
+    padding: "8px 14px",
+    fontFamily: F.sans,
+    fontSize: 12.5,
+    color: C.ink,
+    outline: "none",
   },
   filters: { display: "flex", gap: 6 },
   chip: {
@@ -1356,55 +2129,263 @@ const styles = {
     transition: "transform 0.15s",
   },
 
-  detail: {
-    padding: "28px 0 36px",
-    borderBottom: `1px solid ${C.hairStrong}`,
-    background: C.cream2,
-  },
-  detailGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(5, 1fr)",
-    borderTop: `1px solid ${C.hair}`,
-    borderBottom: `1px solid ${C.hair}`,
-    marginBottom: 30,
-  },
-  detailTile: { padding: "20px 24px", borderRight: `1px solid ${C.hair}` },
-  tileLabel: {
-    fontSize: 10.5,
+  emptyState: {
+    padding: "56px 24px",
+    textAlign: "center",
     color: C.muted,
-    letterSpacing: "0.12em",
-    textTransform: "uppercase",
-    fontWeight: 500,
-    marginBottom: 12,
+    fontSize: 13,
+    borderBottom: `1px solid ${C.hair}`,
   },
-  tileVal: {
-    fontFamily: F.serif,
-    fontSize: 36,
-    fontWeight: 400,
-    fontVariationSettings: '"opsz" 72',
-    letterSpacing: "-0.025em",
-    lineHeight: 1,
-  },
-  tileUnit: { fontFamily: F.mono, fontSize: 12, fontWeight: 500, color: C.muted, marginLeft: 3 },
-  tileSub: { marginTop: 8, fontFamily: F.mono, fontSize: 11.5 },
 
-  detailBody: { display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 36, padding: "0 48px" },
-  detailMeta: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px 32px", fontSize: 13 },
-  metaK: {
+  detail: {
+    background: C.cream2,
+    borderBottom: `1px solid ${C.hairStrong}`,
+  },
+  detailInner: { padding: "26px 48px 36px" },
+
+  contextGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 12,
+    marginBottom: 14,
+  },
+  contextCard: {
+    background: C.cream,
+    border: `1px solid ${C.hair}`,
+    borderLeft: `3px solid`,
+    borderRadius: 3,
+    padding: "12px 16px",
+  },
+  contextLabel: {
     fontSize: 10.5,
     color: C.muted,
     letterSpacing: "0.12em",
     textTransform: "uppercase",
     fontWeight: 500,
     marginBottom: 6,
+    fontFamily: F.mono,
   },
-  metaV: { lineHeight: 1.45, color: C.ink },
+  contextBody: { fontSize: 13.5, lineHeight: 1.55, color: C.ink },
+
+  outcomeStrip: {
+    display: "grid",
+    gridTemplateColumns: "repeat(5, 1fr)",
+    background: C.cream,
+    border: `1px solid ${C.hair}`,
+    borderRadius: 3,
+    marginBottom: 12,
+  },
+  outcomeTile: { padding: "16px 18px", borderRight: `1px solid ${C.hair}` },
+  tileLabel: {
+    fontSize: 10,
+    color: C.muted,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
+    fontWeight: 500,
+    marginBottom: 8,
+    fontFamily: F.mono,
+  },
+  tileVal: {
+    fontFamily: F.mono,
+    fontSize: 22,
+    fontWeight: 500,
+    letterSpacing: "-0.01em",
+    lineHeight: 1.05,
+  },
+  tileSub: { marginTop: 6, fontFamily: F.mono, fontSize: 11, color: C.muted },
+
+  card: {
+    background: C.cream,
+    border: `1px solid ${C.hair}`,
+    borderRadius: 3,
+    padding: "14px 18px",
+    marginBottom: 12,
+  },
+  cardHead: {
+    display: "flex",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  cardLabel: {
+    fontSize: 10.5,
+    color: C.muted,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
+    fontWeight: 500,
+    fontFamily: F.mono,
+  },
+  cardMeta: {
+    fontSize: 10.5,
+    color: C.muted,
+    letterSpacing: "0.06em",
+    fontFamily: F.mono,
+    textTransform: "uppercase",
+  },
+
+  pipeline: {
+    display: "flex",
+    background: C.cream,
+    border: `1px solid ${C.hair}`,
+    borderRadius: 3,
+    overflow: "hidden",
+    marginBottom: 12,
+  },
+  pipelineCell: {
+    flex: 1,
+    padding: "10px 12px",
+    fontSize: 10.5,
+    fontFamily: F.mono,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    textAlign: "center",
+    transition: "background 0.15s",
+  },
+
+  teamBar: {
+    display: "flex",
+    height: 8,
+    borderRadius: 2,
+    overflow: "hidden",
+    marginBottom: 10,
+    background: C.cream2,
+  },
+  teamLegend: { display: "flex", gap: 22, flexWrap: "wrap" },
+  teamLegendItem: { display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: C.muted },
+  teamLegendSwatch: { width: 8, height: 8, borderRadius: 1 },
+
+  rampBars: { display: "flex", gap: 6, marginBottom: 12 },
+  rampCell: {
+    height: 38,
+    background: C.cream,
+    border: "1px solid",
+    borderRadius: 2,
+    padding: "5px 7px",
+    position: "relative",
+    overflow: "hidden",
+  },
+  rampFill: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    height: 3,
+  },
+  rampWeekLabel: { fontSize: 9.5, color: C.muted2, fontFamily: F.mono, letterSpacing: "0.04em" },
+  rampWeekVal: { fontSize: 11.5, fontWeight: 600, fontFamily: F.mono, marginTop: 2 },
+  rampSummary: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr",
+    gap: 14,
+    paddingTop: 10,
+    borderTop: `1px solid ${C.hair}`,
+  },
+  rampStatLabel: {
+    fontSize: 9.5,
+    color: C.muted,
+    letterSpacing: "0.14em",
+    fontFamily: F.mono,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  rampStatVal: {
+    fontSize: 18,
+    fontWeight: 600,
+    fontFamily: F.mono,
+    letterSpacing: "-0.01em",
+  },
+  rampPct: { fontSize: 11, color: C.muted, fontWeight: 500 },
+
+  qualGrid: { display: "grid", gridTemplateColumns: "repeat(5, 1fr)", borderTop: `1px solid ${C.hair}` },
+  qualCell: { padding: "14px 16px" },
+
+  funnel: { display: "flex", alignItems: "flex-end" },
+  funnelGroup: { flex: 1, display: "flex", alignItems: "flex-end" },
+  funnelStage: { flex: 1, textAlign: "center" },
+  funnelBar: {
+    border: `1px solid ${C.hair}`,
+    borderRadius: 2,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 12,
+    fontWeight: 600,
+    fontFamily: F.mono,
+    marginBottom: 4,
+  },
+  funnelLabel: {
+    fontSize: 9,
+    color: C.muted,
+    fontFamily: F.mono,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+  },
+  funnelArrow: {
+    padding: "0 6px",
+    textAlign: "center",
+    alignSelf: "center",
+    minWidth: 38,
+  },
+
+  detailBody: {
+    display: "grid",
+    gridTemplateColumns: "1.4fr 1fr",
+    gap: 18,
+    marginBottom: 14,
+  },
+
+  metaCol: {
+    background: C.cream,
+    border: `1px solid ${C.hair}`,
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  metaRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "8px 14px",
+    borderBottom: `1px solid ${C.hair}`,
+    minHeight: 32,
+  },
+  metaK: {
+    fontSize: 10,
+    color: C.muted,
+    fontWeight: 500,
+    letterSpacing: "0.12em",
+    fontFamily: F.mono,
+    textTransform: "uppercase",
+  },
+  metaV: {
+    fontSize: 12.5,
+    color: C.ink,
+    textAlign: "right",
+    maxWidth: "62%",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
   code: {
     fontFamily: F.mono,
-    fontSize: 12,
+    fontSize: 11.5,
     background: C.cream3,
     padding: "1px 6px",
     borderRadius: 3,
+  },
+
+  inlineEditable: {
+    cursor: "text",
+    borderBottom: `1px dashed ${C.hairStrong}`,
+    paddingBottom: 1,
+  },
+  inlineInput: {
+    padding: "2px 6px",
+    border: `1px solid ${C.ink}`,
+    borderRadius: 2,
+    fontSize: 12.5,
+    fontFamily: F.sans,
+    background: C.cream,
+    outline: "none",
+    width: 90,
   },
 
   aiPanel: {
@@ -1440,12 +2421,7 @@ const styles = {
     textTransform: "uppercase",
     color: C.muted,
   },
-  aiPanelInner: {
-    position: "relative",
-    padding: "22px 24px",
-    flex: 1,
-    overflow: "hidden",
-  },
+  aiPanelInner: { position: "relative", padding: "22px 24px", flex: 1, overflow: "hidden" },
   aiContent: { transition: "filter 0.35s ease, opacity 0.35s ease" },
   aiOverlay: {
     position: "absolute",
@@ -1469,17 +2445,6 @@ const styles = {
     borderRadius: 3,
     border: `1px solid ${C.hairStrong}`,
   },
-  aiPanelBadge: {
-    position: "absolute",
-    top: -9,
-    left: 18,
-    background: C.cream2,
-    padding: "0 10px",
-    fontFamily: F.mono,
-    fontSize: 10,
-    letterSpacing: "0.14em",
-    color: C.muted,
-  },
   aiBody: {
     fontFamily: F.serif,
     fontVariationSettings: '"opsz" 14',
@@ -1494,20 +2459,23 @@ const styles = {
     color: C.muted,
     lineHeight: 1.5,
   },
-  aiError: { marginTop: 10, fontSize: 11.5, color: C.red, fontFamily: F.mono },
 
-  draftActions: { display: "flex", gap: 10, marginTop: 22, flexWrap: "wrap" },
-
-  footer: {
-    padding: "36px 48px 40px",
-    borderTop: `1px solid ${C.hair}`,
-    fontSize: 11,
-    color: C.muted,
+  actionBar: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingTop: 4,
+  },
+  removeGhost: {
+    background: "transparent",
+    border: "none",
+    color: C.muted2,
+    fontSize: 11.5,
     fontFamily: F.mono,
-    letterSpacing: "0.08em",
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    cursor: "pointer",
+    padding: "6px 4px",
   },
 
   modalScrim: {
@@ -1524,7 +2492,7 @@ const styles = {
     background: C.cream,
     maxWidth: 720,
     width: "100%",
-    maxHeight: "80vh",
+    maxHeight: "84vh",
     borderRadius: 4,
     border: `1px solid ${C.hairStrong}`,
     padding: "20px 24px 24px",
@@ -1534,8 +2502,9 @@ const styles = {
   modalHead: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 14,
+    gap: 12,
   },
   modalLabel: {
     fontFamily: F.mono,
@@ -1543,6 +2512,15 @@ const styles = {
     letterSpacing: "0.14em",
     color: C.muted,
     textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  modalTitle: {
+    fontFamily: F.serif,
+    fontSize: 17,
+    fontWeight: 500,
+    fontVariationSettings: '"opsz" 24',
+    letterSpacing: "-0.01em",
+    color: C.ink,
   },
   modalClose: {
     background: "transparent",
@@ -1554,13 +2532,18 @@ const styles = {
   modalBody: {
     fontFamily: F.serif,
     fontVariationSettings: '"opsz" 14',
-    fontSize: 15,
+    fontSize: 14.5,
     lineHeight: 1.6,
     whiteSpace: "pre-wrap",
     color: C.ink,
     margin: 0,
+    padding: "16px 18px",
+    background: C.cream2,
+    border: `1px solid ${C.hair}`,
+    borderRadius: 3,
   },
-  modalError: { fontFamily: F.mono, fontSize: 12.5, color: C.red },
+  modalError: { fontFamily: F.mono, fontSize: 12.5, color: C.red, padding: "12px 0" },
+  modalFooter: { display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 14 },
 
   formGrid: {
     display: "grid",
@@ -1575,6 +2558,7 @@ const styles = {
     textTransform: "uppercase",
     fontWeight: 500,
     marginBottom: 6,
+    fontFamily: F.mono,
   },
   input: {
     width: "100%",
@@ -1594,5 +2578,17 @@ const styles = {
     gap: 10,
     paddingTop: 16,
     borderTop: `1px solid ${C.hair}`,
+  },
+
+  footer: {
+    padding: "32px 48px 40px",
+    borderTop: `1px solid ${C.hair}`,
+    fontSize: 11,
+    color: C.muted,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    fontFamily: F.mono,
+    letterSpacing: "0.08em",
   },
 };
